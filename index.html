@@ -23,6 +23,8 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "818467404045",
   appId: "1:818467404045:web:60acc84922ec5360aa9844"
 };
+/* Dominio de correo del despacho: solo estos correos pueden pedir acceso; los demás entran por invitación. */
+window.AUD_DOMINIO = 'cpcra.com.mx';
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -48,8 +50,29 @@ window.FIREBASE_CONFIG = {
 .gb.pri{background:#1F3557;color:#fff;border-color:#1F3557}
 #gate a{color:#4f6f4a}
 #g-bar{display:flex;flex-direction:column;gap:4px;margin-top:8px}
-.gl{all:unset;cursor:pointer;font-size:.75rem;opacity:.85;padding:3px 0;color:inherit;text-decoration:underline;text-underline-offset:2px}
-.gl.warn{color:#F2C879}
+.gl{all:unset;cursor:pointer;font-size:.8rem;font-weight:500;padding:6px 9px;border-radius:6px;color:var(--side-ink,#fff);border:1px solid color-mix(in srgb,var(--side-ink,#fff) 35%,transparent);display:flex;gap:6px;align-items:center}
+.gl:hover{background:color-mix(in srgb,var(--side-ink,#fff) 14%,transparent)}
+.gl .gi{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;font-size:.7rem;font-weight:700;background:var(--side-on,#7F9C7A);color:var(--side-on-ink,#0F1A12)}
+.gl.warn{border-color:var(--side-on,#7F9C7A);background:color-mix(in srgb,var(--side-on,#7F9C7A) 22%,transparent)}
+.gl.warn .gi{background:#F2C879;color:#1a1300}
+#gate .gchk{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto;border:1px solid #d6dfe6;border-radius:6px;padding:6px 8px;margin:4px 0}
+#gate .gchk label{display:flex;gap:6px;align-items:center;margin:0;font-size:.85rem}#gate .gchk input{width:auto;margin:0}
+#gate details{margin-top:4px}#gate summary{cursor:pointer}
+#portal{min-height:100vh;background:var(--bg)}
+.p-top{background:var(--side,#1F3557);color:var(--side-ink,#fff);display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px max(16px,3vw)}
+.p-top small{display:block;opacity:.8;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}.p-top b{font-family:var(--display);font-size:1.2rem}
+.p-who{text-align:right;font-size:.82rem}.p-who .gl{display:inline-flex;margin-top:4px}
+.p-main{max-width:1100px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:16px}
+.p-main .gsm{font-size:.85rem;color:var(--muted)}
+.p-main h1{font-size:1.5rem}
+.p-sel{display:flex;gap:8px;align-items:center;font-size:.9rem}.p-sel select{width:auto}
+.p-av{display:flex;flex-direction:column;gap:6px;margin-top:6px}.p-bar{height:10px;border-radius:5px;background:var(--sunk);overflow:hidden}.p-bar i{display:block;height:100%;background:var(--sage)}
+.p-msg{background:var(--sage-soft);border-radius:6px;padding:10px 12px;white-space:pre-wrap}
+.p-obs{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:6px}.p-obs p{margin:0}.p-obs label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted)}
+.p-main .grow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.p-main a.gb{text-decoration:none;display:inline-block}
+.p-html{overflow-x:auto;font-size:.9rem}.p-html table{border-collapse:collapse;width:100%}.p-html td,.p-html th{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}.p-html .n{text-align:right}
+@media print{.p-top,.p-sel,.gb{display:none}}
 .gtoast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000;background:#1F3557;color:#fff;padding:10px 16px;border-radius:8px;max-width:90vw;font-size:.9rem;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .gtoast.bad{background:#8c2f2f}
 </style>
@@ -57,7 +80,7 @@ window.FIREBASE_CONFIG = {
 /* Layout: barra lateral de fases del encargo + área de trabajo con cédulas tabulares densas */
 :root{
   --bg:#F3F6F4; --surface:#FFFFFF; --sunk:#E9EFEC; --fg:#18233A; --muted:#5B6878; --line:#D6DFDA;
-  --navy:#1F3557; --navy-ink:#FFFFFF; --sage:#7F9C7A; --sage-soft:#E3ECE1;
+  --navy:#1F3557; --navy-ink:#FFFFFF; --sage:#7F9C7A; --sage-soft:#E3ECE1; --sage-ink:#0F1A12; --side:#1F3557; --side-ink:#FFFFFF; --side-on:#7F9C7A; --side-on-ink:#0F1A12;
   --ok:#2F7A55; --ok-soft:#DFF0E6; --warn:#A86A12; --warn-soft:#FBEFD9; --bad:#B23A3A; --bad-soft:#F8E1E1;
   --display:"Source Serif 4", Georgia, "Times New Roman", serif;
   --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
@@ -66,11 +89,11 @@ window.FIREBASE_CONFIG = {
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0E151E; --surface:#15202C; --sunk:#1B2836; --fg:#E4EAF0; --muted:#94A2B1; --line:#283747;
-  --navy:#9DB8DD; --navy-ink:#0E151E; --sage:#A5C19F; --sage-soft:#22332A;
+  --navy:#9DB8DD; --navy-ink:#0E151E; --sage:#A5C19F; --sage-soft:#22332A; --sage-ink:#0E151E; --side:#0E1A29; --side-ink:#E4EAF0; --side-on:#A5C19F; --side-on-ink:#0E151E;
   --ok:#6CC596; --ok-soft:#173326; --warn:#E3AE5C; --warn-soft:#3A2C14; --bad:#EE8B8B; --bad-soft:#3A1C1F; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E151E; --surface:#15202C; --sunk:#1B2836; --fg:#E4EAF0; --muted:#94A2B1; --line:#283747;
-  --navy:#9DB8DD; --navy-ink:#0E151E; --sage:#A5C19F; --sage-soft:#22332A;
+  --navy:#9DB8DD; --navy-ink:#0E151E; --sage:#A5C19F; --sage-soft:#22332A; --sage-ink:#0E151E; --side:#0E1A29; --side-ink:#E4EAF0; --side-on:#A5C19F; --side-on-ink:#0E151E;
   --ok:#6CC596; --ok-soft:#173326; --warn:#E3AE5C; --warn-soft:#3A2C14; --bad:#EE8B8B; --bad-soft:#3A1C1F; color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
@@ -79,19 +102,19 @@ button,input,select,textarea{font:inherit;color:inherit}
 h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0;letter-spacing:-.01em}
 h1{font-size:1.55rem} h2{font-size:1.2rem} h3{font-size:1rem;font-family:var(--body);font-weight:600}
 .app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
-aside{background:var(--navy);color:var(--navy-ink);padding-block:18px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:14px;display:flex;flex-direction:column;gap:14px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow:auto}
+aside{background:var(--side);color:var(--side-ink);padding-block:18px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:14px;display:flex;flex-direction:column;gap:14px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow:auto}
 :root[data-theme="dark"] aside{}
-.brand{display:flex;flex-direction:column;gap:2px;padding-bottom:12px;border-bottom:1px solid color-mix(in srgb,var(--navy-ink) 25%,transparent)}
+.brand{display:flex;flex-direction:column;gap:2px;padding-bottom:12px;border-bottom:1px solid color-mix(in srgb,var(--side-ink) 25%,transparent)}
 .brand b{font-family:var(--display);font-size:1.05rem}
 .brand small{opacity:.75;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
 nav{display:flex;flex-direction:column;gap:2px}
 nav button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;padding:7px 9px;border-radius:5px;font-size:.88rem}
 nav button .n{font-family:var(--mono);font-size:.72rem;opacity:.7;width:18px}
-nav button:hover{background:color-mix(in srgb,var(--navy-ink) 12%,transparent)}
-nav button.on{background:var(--sage);color:#0f1a12}
+nav button:hover{background:color-mix(in srgb,var(--side-ink) 14%,transparent)}
+nav button.on{background:var(--side-on);color:var(--side-on-ink);font-weight:600}
 nav button:focus-visible{outline:2px solid var(--sage)}
 nav .sep{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.6;padding:10px 9px 2px}
-.who{margin-top:auto;font-size:.78rem;opacity:.85}
+.who{margin-top:auto;font-size:.8rem}
 main{min-width:0;padding-block:20px 60px;padding-left:max(16px,2vw);padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
 .topbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;justify-content:space-between}
 .topbar .meta{color:var(--muted);font-size:.85rem}
@@ -113,7 +136,11 @@ input[type=checkbox]{accent-color:var(--navy);width:16px;height:16px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:5px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500;font-size:.85rem;white-space:nowrap}
 .btn:hover{border-color:var(--navy)}
 .btn.pri{background:var(--navy);color:var(--navy-ink);border-color:var(--navy)}
-.btn.sage{background:var(--sage);color:#0f1a12;border-color:var(--sage)}
+.btn.sage{background:var(--sage);color:var(--sage-ink);border-color:var(--sage)}
+.btn.ghost{border-color:transparent;background:none;color:var(--navy)}
+.norm{font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:3px}.norm span{font-weight:600;color:var(--fg)}
+.fundl{display:flex;gap:4px;align-items:center;margin-top:4px}.fundl input{font-size:.78rem;padding:3px 6px;color:var(--muted)}
+#nav-back{margin-right:4px}
 .btn.dng{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
 .btn.sm{padding:3px 8px;font-size:.78rem}
 .btn:disabled{opacity:.45;cursor:not-allowed}
@@ -244,7 +271,7 @@ const dbW={doc:docW,collection:colW};
 let AU=null,MEM=null,ADMIN=false,MEMBERS={};
 const userW={id:async()=>AU.uid,me:async()=>({name:(MEM&&MEM.name)||AU.displayName||AU.email}),canEdit:()=>ADMIN,can:k=>k==='data.write'?(ADMIN||(MEM&&MEM.rol==='editor')):null,
  profiles:async ids=>Object.fromEntries(ids.map(id=>[id,MEMBERS[id]?{name:MEMBERS[id].name||MEMBERS[id].email}:null])),
- search:async q=>{q=q.toLowerCase();return Object.entries(MEMBERS).filter(([,m])=>m.activo&&((m.name||'').toLowerCase().includes(q)||(m.email||'').toLowerCase().includes(q))).map(([id,m])=>({id,name:m.name||m.email,email:m.email}))}};
+ search:async q=>{q=q.toLowerCase();return Object.entries(MEMBERS).filter(([,m])=>m.activo&&m.rol!=='cliente'&&((m.name||'').toLowerCase().includes(q)||(m.email||'').toLowerCase().includes(q))).map(([id,m])=>({id,name:m.name||m.email,email:m.email}))}};
 
 /* ---------- carpeta de OneDrive (evidencias y respaldos) ---------- */
 const FSOK=!!window.showDirectoryPicker;
@@ -277,65 +304,144 @@ const dlW={save:async({filename,data})=>{const u=URL.createObjectURL(data);const
  if(/^Respaldo_/i.test(filename)&&ROOT_OK){try{await writeFile(['Respaldos'],filename,data);note('Copia del respaldo guardada en OneDrive › Respaldos')}catch(e){}}}};
 
 /* ---------- barra de cuenta en el menú lateral ---------- */
-function folderUI(){const b=document.getElementById('g-fold');if(!b)return;rootState().then(st=>{b.textContent=st==='granted'?'OneDrive: '+(ROOT&&ROOT.name):st==='none'?'Vincular carpeta de OneDrive':'Autorizar carpeta de OneDrive';b.classList.toggle('warn',st!=='granted')})}
+function folderUI(){const b=document.getElementById('g-fold');if(!b)return;rootState().then(st=>{b.innerHTML=st==='granted'?'<span class="gi">✓</span> OneDrive: '+H(ROOT&&ROOT.name):'<span class="gi">!</span> '+(st==='none'?'Vincular carpeta de OneDrive':'Autorizar carpeta de OneDrive');b.classList.toggle('warn',st!=='granted')})}
 function bar(){const who=document.getElementById('who');if(!who||document.getElementById('g-bar'))return;const d=document.createElement('div');d.id='g-bar';
  d.innerHTML=`<button id="g-inst" class="gl" style="display:none">Instalar en el escritorio</button><button id="g-fold" class="gl warn">Carpeta de OneDrive</button>${ADMIN?'<button id="g-users" class="gl">Usuarios del despacho</button>':''}<button id="g-out" class="gl">Cerrar sesión · ${H(AU.email||'')}</button>`;who.after(d);
  document.getElementById('g-fold').onclick=async()=>{const st=await rootState();if(st==='granted'){if(confirm('¿Cambiar la carpeta de OneDrive vinculada?'))pickFolder()}else if(st==='none')pickFolder();else grant()};
  document.getElementById('g-inst').onclick=doInstall;instUI();document.getElementById('g-out').onclick=()=>firebase.auth().signOut().then(()=>location.reload());
  if(ADMIN)document.getElementById('g-users').onclick=usersPanel;folderUI()}
 
+/* ---------- dominio del despacho e invitaciones ---------- */
+const DOMINIO=String(window.AUD_DOMINIO||'cpcra.com.mx').toLowerCase().replace(/^@/,'');
+const emailOf=u=>String((u&&u.email)||'').toLowerCase();
+const inDomain=u=>emailOf(u).endsWith('@'+DOMINIO);
+const ROLN={admin:'Administrador',editor:'Colaborador',lectura:'Solo lectura',cliente:'Cliente'};
+let REQS={},INVS={},ENGS=[];
+
 /* ---------- administración de usuarios ---------- */
-let REQS={};
-function usersPanel(){const rows=Object.entries(MEMBERS).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));const req=Object.entries(REQS).filter(([id])=>!MEMBERS[id]||!MEMBERS[id].activo);
- const sel=(id,v)=>`<select data-u="${H(id)}" class="g-rol">${[['admin','Administrador'],['editor','Colaborador'],['lectura','Solo lectura']].map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('')}</select>`;
+function engChecks(name,sel){sel=new Set(sel||[]);return ENGS.length?`<div class="gchk">${ENGS.map(e=>`<label><input type="checkbox" name="${H(name)}" value="${H(e.id)}" ${sel.has(e.id)?'checked':''}> ${H(e.n)}</label>`).join('')}</div>`:'<p class="gsm">Aún no hay expedientes.</p>'}
+const checked=(box,name)=>[...box.querySelectorAll(`input[name="${name}"]:checked`)].map(x=>x.value);
+async function loadEngs(){try{const q=await fs.collection('eng').get();ENGS=q.docs.map(d=>{const x=d.data()||{};const dd=x.datos||{};return {id:d.id,n:(dd.nombre||'Expediente')+' · '+(dd.ejercicio||'')}}).sort((a,b)=>a.n.localeCompare(b.n))}catch(e){ENGS=[]}}
+async function usersPanel(){await loadEngs();const rows=Object.entries(MEMBERS).sort((a,b)=>(a[1].rol==='cliente')-(b[1].rol==='cliente')||(a[1].name||'').localeCompare(b[1].name||''));const req=Object.entries(REQS).filter(([id])=>!MEMBERS[id]||!MEMBERS[id].activo);
+ const sel=(id,v,cls)=>`<select data-u="${H(id)}" class="${cls||'g-rol'}">${Object.entries(ROLN).map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('')}</select>`;
+ const invs=Object.entries(INVS);const url=location.origin+location.pathname;
  say(`<h1>Usuarios del despacho</h1>
- <p class="gsm">Administrador: configura el despacho y los usuarios. Colaborador: trabaja en los expedientes. Solo lectura: consulta. Los roles dentro de cada encargo (auxiliar, encargado, gerente, socio, revisor de calidad) se asignan en Planeación.</p>
- ${req.length?`<h2>Solicitudes de acceso</h2><table>${req.map(([id,r])=>`<tr><td>${H(r.name)}<br><small>${H(r.email)}</small></td><td>${sel(id,'editor')}</td><td><button class="gb pri" data-ok="${H(id)}">Aprobar</button> <button class="gb" data-no="${H(id)}">Rechazar</button></td></tr>`).join('')}</table>`:''}
- <h2>Integrantes</h2><table>${rows.map(([id,m])=>`<tr><td>${H(m.name)}<br><small>${H(m.email)}</small></td><td>${id===AU.uid?'<small>Tú</small>':sel(id,m.rol)}</td><td>${id===AU.uid?'':`<button class="gb" data-act2="${H(id)}">${m.activo?'Desactivar':'Reactivar'}</button>`}</td></tr>`).join('')}</table>
+ <p class="gsm">Pueden pedir acceso los correos <b>@${H(DOMINIO)}</b> que confirmen su correo. Cualquier otra persona (clientes, auditores externos, consultores) entra solo por invitación. <b>Administrador</b> configura el despacho y los usuarios; <b>Colaborador</b> trabaja en los expedientes; <b>Solo lectura</b> consulta; <b>Cliente</b> ve únicamente el portal de los expedientes que le asignes.</p>
+ ${req.length?`<h2>Solicitudes de acceso</h2><table>${req.map(([id,r])=>`<tr><td>${H(r.name)}<br><small>${H(r.email)}</small></td><td>${sel(id,'editor','g-rq')}</td><td><button class="gb pri" data-ok="${H(id)}">Aprobar</button> <button class="gb" data-no="${H(id)}">Rechazar</button></td></tr>`).join('')}</table>`:''}
+ <h2>Invitar a una persona externa</h2>
+ <label>Correo<input id="iv-e" type="email" placeholder="contador@cliente.com"></label>
+ <label>Rol<select id="iv-r"><option value="cliente">Cliente</option><option value="lectura">Solo lectura</option><option value="editor">Colaborador</option><option value="admin">Administrador</option></select></label>
+ <div id="iv-engs"><label>Expedientes que podrá ver (obligatorio para clientes)</label>${engChecks('iv-eng',[])}</div>
+ <div class="grow"><button class="gb pri" id="iv-go">Crear invitación</button></div>
+ ${invs.length?`<table>${invs.map(([em,x])=>`<tr><td>${H(em)}<br><small>${H(ROLN[x.rol]||x.rol)}${x.rol==='cliente'?' · '+H((x.engs||[]).map(id=>(ENGS.find(e=>e.id===id)||{n:id}).n).join(', ')):''}</small></td><td><small>${x.usada?'Ya entró':'Pendiente'}</small></td><td><button class="gb" data-cp="${H(em)}">Copiar mensaje</button> <button class="gb" data-iv="${H(em)}">Quitar</button></td></tr>`).join('')}</table>`:''}
+ <h2>Integrantes</h2><table>${rows.map(([id,m])=>`<tr><td>${H(m.name)}<br><small>${H(m.email)}</small>${m.rol==='cliente'?`<details><summary><small>Expedientes asignados (${(m.engs||[]).length})</small></summary>${engChecks('me-'+id,m.engs)}<button class="gb" data-engs="${H(id)}">Guardar expedientes</button></details>`:''}</td><td>${id===AU.uid?'<small>Tú</small>':sel(id,m.rol)}</td><td>${id===AU.uid?'':`<button class="gb" data-act2="${H(id)}">${m.activo?'Desactivar':'Reactivar'}</button>`}</td></tr>`).join('')}</table>
  <h2>Empresa de demostración</h2><p class="gsm">Carga la empresa demo (Plásticos Moldeados de Occidente, ejercicio 2025) para capacitar al equipo. Se elimina desde el propio expediente.</p><button class="gb" id="g-demo">Cargar empresa demo</button>
  <div class="grow"><button class="gb pri" id="g-close">Cerrar</button></div>`);
- const box=gate();
- box.querySelectorAll('[data-ok]').forEach(b=>b.onclick=async()=>{const id=b.dataset.ok;const r=REQS[id];const rol=box.querySelector(`select[data-u="${id}"]`).value;try{await fs.doc('members/'+id).set({name:r.name||'',email:r.email||'',rol,activo:true,at:new Date().toISOString(),by:AU.uid});await fs.doc('solicitudes/'+id).delete();note('Acceso aprobado.')}catch(e){note(msg(e),true)}});
- box.querySelectorAll('[data-no]').forEach(b=>b.onclick=async()=>{try{await fs.doc('solicitudes/'+b.dataset.no).delete()}catch(e){note(msg(e),true)}});
- box.querySelectorAll('[data-act2]').forEach(b=>b.onclick=async()=>{const id=b.dataset.act2;try{await fs.doc('members/'+id).update({activo:!MEMBERS[id].activo})}catch(e){note(msg(e),true)}});
- box.querySelectorAll('.g-rol').forEach(s=>s.onchange=async()=>{if(!MEMBERS[s.dataset.u])return;try{await fs.doc('members/'+s.dataset.u).update({rol:s.value});note('Rol actualizado.')}catch(e){note(msg(e),true)}});
+ const box=gate();const ivR=box.querySelector('#iv-r'),ivE=box.querySelector('#iv-engs');const ivSync=()=>{ivE.style.display=ivR.value==='cliente'?'':'none'};ivR.onchange=ivSync;ivSync();
+ box.querySelector('#iv-go').onclick=async()=>{const em=box.querySelector('#iv-e').value.trim().toLowerCase();const rol=ivR.value;const engs=rol==='cliente'?checked(box,'iv-eng'):[];
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){note('Escribe un correo válido.',true);return}if(rol==='cliente'&&!engs.length){note('Elige al menos un expediente para el cliente.',true);return}
+  try{await fs.doc('invitaciones/'+em).set({rol,engs,by:AU.uid,at:new Date().toISOString(),usada:false});note('Invitación creada. Copia el mensaje y envíaselo.');usersPanel()}catch(e){note(msg(e),true)}};
+ box.querySelectorAll('[data-cp]').forEach(b=>b.onclick=async()=>{const em=b.dataset.cp;const x=INVS[em]||{};const t=`Hola. Te damos acceso al ${x.rol==='cliente'?'portal de clientes':'Expediente de Auditoría'} de ${document.title.includes('·')?'':'nuestro despacho'}.\n\n1. Abre ${url} en Chrome o Edge.\n2. Pulsa «Crea tu cuenta» y regístrate con este correo: ${em}\n3. Confirma tu correo con el enlace que te llegará (revisa también la carpeta de correo no deseado).\n\nCualquier duda, quedo a tus órdenes.`;try{await navigator.clipboard.writeText(t);note('Mensaje copiado. Pégalo en un correo para '+em+'.')}catch(e){prompt('Copia este mensaje:',t)}});
+ box.querySelectorAll('[data-iv]').forEach(b=>b.onclick=async()=>{try{await fs.doc('invitaciones/'+b.dataset.iv).delete();usersPanel()}catch(e){note(msg(e),true)}});
+ box.querySelectorAll('[data-engs]').forEach(b=>b.onclick=async()=>{const id=b.dataset.engs;try{await fs.doc('members/'+id).update({engs:checked(box,'me-'+id)});note('Expedientes del cliente actualizados.')}catch(e){note(msg(e),true)}});
+ box.querySelectorAll('[data-ok]').forEach(b=>b.onclick=async()=>{const id=b.dataset.ok;const r=REQS[id];const rol=box.querySelector(`select.g-rq[data-u="${id}"]`).value;try{await fs.doc('members/'+id).set({name:r.name||'',email:r.email||'',rol,engs:[],activo:true,at:new Date().toISOString(),by:AU.uid});await fs.doc('solicitudes/'+id).delete();note('Acceso aprobado.');usersPanel()}catch(e){note(msg(e),true)}});
+ box.querySelectorAll('[data-no]').forEach(b=>b.onclick=async()=>{try{await fs.doc('solicitudes/'+b.dataset.no).delete();usersPanel()}catch(e){note(msg(e),true)}});
+ box.querySelectorAll('[data-act2]').forEach(b=>b.onclick=async()=>{const id=b.dataset.act2;try{await fs.doc('members/'+id).update({activo:!MEMBERS[id].activo});usersPanel()}catch(e){note(msg(e),true)}});
+ box.querySelectorAll('select.g-rol').forEach(s=>s.onchange=async()=>{if(!MEMBERS[s.dataset.u])return;try{await fs.doc('members/'+s.dataset.u).update({rol:s.value});note('Rol actualizado.');usersPanel()}catch(e){note(msg(e),true)}});
  document.getElementById('g-demo').onclick=loadDemo;document.getElementById('g-close').onclick=()=>{gate().style.display='none'}}
 async function loadDemo(){const el=document.getElementById('demo-seed');if(!el){note('Este archivo no incluye la empresa demo.',true);return}const seed=JSON.parse(el.textContent);
  if((await fs.doc('eng/edemo2025').get()).exists){note('La empresa demo ya está cargada.');return}
  try{const keys=Object.keys(seed).filter(k=>k!=='eng/edemo2025');for(const k of keys)await dbW.doc(k).set(seed[k]);const e=seed['eng/edemo2025'];const now=new Date().toISOString();e.createdAt=now;e.upAt=now;await dbW.doc('eng/edemo2025').set(e);note('Empresa demo cargada.');gate().style.display='none'}catch(x){note(msg(x),true)}}
 
 /* ---------- inicio de sesión ---------- */
-function loginScreen(mode){const reg=mode==='reg';say(`<h1>${reg?'Crear cuenta':'Iniciar sesión'}</h1><p class="gsm">Expediente de Auditoría · base compartida del despacho.</p>
+function loginScreen(mode){const reg=mode==='reg';say(`<h1>${reg?'Crear cuenta':'Iniciar sesión'}</h1><p class="gsm">Expediente de Auditoría · base compartida del despacho.${reg?` Usa tu correo <b>@${H(DOMINIO)}</b> o el correo con el que te invitaron.`:''}</p>
  ${reg?'<label>Nombre completo<input id="g-n" autocomplete="name"></label>':''}
  <label>Correo<input id="g-e" type="email" autocomplete="email"></label><label>Contraseña<input id="g-p" type="password" autocomplete="${reg?'new-password':'current-password'}"></label>
- <div class="grow"><button class="gb pri" id="g-go">${reg?'Crear cuenta':'Entrar'}</button><button class="gb" id="g-goog">Entrar con Google</button></div>
+ <div class="grow"><button class="gb pri" id="g-go">${reg?'Crear cuenta':'Entrar'}</button></div>
  <p class="gsm" id="g-inst2" style="display:none"><a href="#" id="g-inst3">Instalar en el escritorio y menú Inicio</a></p><p class="gsm">${reg?'¿Ya tienes cuenta? <a href="#" id="g-sw">Inicia sesión</a>':'¿Primera vez? <a href="#" id="g-sw">Crea tu cuenta</a> · <a href="#" id="g-rst">Olvidé mi contraseña</a>'}</p>`);
  const A=firebase.auth();const v=id=>(document.getElementById(id)||{}).value||'';
  document.getElementById('g-inst3').onclick=e=>{e.preventDefault();doInstall()};instUI();document.getElementById('g-sw').onclick=e=>{e.preventDefault();loginScreen(reg?'in':'reg')};
- const r=document.getElementById('g-rst');if(r)r.onclick=async e=>{e.preventDefault();if(!v('g-e')){note('Escribe tu correo.',true);return}try{await A.sendPasswordResetEmail(v('g-e').trim());note('Te enviamos un correo para restablecer la contraseña.')}catch(x){note(msg(x),true)}};
- document.getElementById('g-go').onclick=async()=>{try{if(reg){if(!v('g-n').trim()){note('Escribe tu nombre.',true);return}REGNAME=v('g-n').trim();const c=await A.createUserWithEmailAndPassword(v('g-e').trim(),v('g-p'));await c.user.updateProfile({displayName:v('g-n').trim()})}else await A.signInWithEmailAndPassword(v('g-e').trim(),v('g-p'))}catch(x){note(msg(x),true)}};
- document.getElementById('g-p').onkeydown=e=>{if(e.key==='Enter')document.getElementById('g-go').click()};
- document.getElementById('g-goog').onclick=async()=>{try{await A.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(x){note(msg(x),true)}}}
+ const r=document.getElementById('g-rst');if(r)r.onclick=async e=>{e.preventDefault();if(!v('g-e')){note('Escribe tu correo.',true);return}try{await A.sendPasswordResetEmail(v('g-e').trim());note('Te enviamos un correo para restablecer la contraseña. Revisa también el correo no deseado.')}catch(x){note(msg(x),true)}};
+ document.getElementById('g-go').onclick=async()=>{try{if(reg){if(!v('g-n').trim()){note('Escribe tu nombre.',true);return}REGNAME=v('g-n').trim();NEWREG=true;const c=await A.createUserWithEmailAndPassword(v('g-e').trim(),v('g-p'));await c.user.updateProfile({displayName:REGNAME});try{await c.user.sendEmailVerification()}catch(e){}}else await A.signInWithEmailAndPassword(v('g-e').trim(),v('g-p'))}catch(x){note(msg(x),true)}};
+ document.getElementById('g-p').onkeydown=e=>{if(e.key==='Enter')document.getElementById('g-go').click()}}
 
-let started=false,REGNAME='';
+let started=false,REGNAME='',NEWREG=false;
 function start(){if(started){bar();return}started=true;gate().style.display='none';
  window.claude={use:async n=>({db:dbW,user:userW,assets:assetsW,downloads:dlW})[n]||null};
  window.__ready=true;if(window.__boot)window.__boot();setTimeout(bar,50)}
-
+const outBtn=()=>{const b=document.getElementById('g-out2');if(b)b.onclick=()=>firebase.auth().signOut().then(()=>location.reload())};
+function verifyScreen(u){say(`<h1>Confirma tu correo</h1><p>Te enviamos un enlace a <b>${H(u.email)}</b>. Ábrelo para confirmar que el correo es tuyo y después pulsa «Ya lo confirmé».</p><p class="gsm">Si no lo ves en unos minutos, revisa la carpeta de correo no deseado o pide que te lo reenvíe. En Outlook puedes agregar el remitente a tus remitentes seguros.</p>
+ <div class="grow"><button class="gb pri" id="g-vok">Ya lo confirmé</button><button class="gb" id="g-vre">Reenviar el correo</button><button class="gb" id="g-out2">Cerrar sesión</button></div>`);outBtn();
+ document.getElementById('g-vre').onclick=async()=>{try{await u.sendEmailVerification();note('Correo reenviado.')}catch(e){note(msg(e),true)}};
+ document.getElementById('g-vok').onclick=async()=>{try{await u.reload();const nu=firebase.auth().currentUser;if(nu&&nu.emailVerified){await nu.getIdToken(true);afterLogin(nu)}else note('Aún no aparece confirmado. Abre el enlace del correo y vuelve a intentar.',true)}catch(e){note(msg(e),true)}}}
 async function afterLogin(u){AU=u;const name=u.displayName||REGNAME||(u.email||'').split('@')[0];
  say('<h1>Conectando…</h1><p class="gsm">Verificando tu acceso al despacho.</p>');
- let own=null;try{own=await fs.doc('config/owner').get()}catch(e){say(`<h1>No se pudo leer la base</h1><p>${H(msg(e))}</p><p class="gsm">Revisa que hayas publicado las reglas de seguridad (archivo firestore.rules) en la consola de Firebase.</p><div class="grow"><button class="gb" id="g-out2">Cerrar sesión</button></div>`);document.getElementById('g-out2').onclick=()=>firebase.auth().signOut().then(()=>location.reload());return}
- if(!own.exists){say(`<h1>Configurar el despacho</h1><p>Aún no hay administrador. Si eres el titular del despacho, conviértete en administrador: podrás aprobar a tu equipo y cargar la empresa demo.</p><div class="grow"><button class="gb pri" id="g-own">Ser el administrador del despacho</button><button class="gb" id="g-out2">Cerrar sesión</button></div>`);
-  document.getElementById('g-out2').onclick=()=>firebase.auth().signOut().then(()=>location.reload());
-  document.getElementById('g-own').onclick=async()=>{try{await fs.doc('config/owner').set({uid:u.uid,email:u.email||'',at:new Date().toISOString()});await fs.doc('members/'+u.uid).set({name,email:u.email||'',rol:'admin',activo:true,at:new Date().toISOString()});afterLogin(u)}catch(e){note(msg(e),true)}};return}
+ let own=null;try{own=await fs.doc('config/owner').get()}catch(e){say(`<h1>No se pudo leer la base</h1><p>${H(msg(e))}</p><p class="gsm">Revisa que hayas publicado las reglas de seguridad (archivo firestore.rules) en la consola de Firebase.</p><div class="grow"><button class="gb" id="g-out2">Cerrar sesión</button></div>`);outBtn();return}
+ if(!own.exists){say(`<h1>Configurar el despacho</h1><p>Aún no hay administrador. Si eres el titular del despacho, conviértete en administrador: podrás aprobar a tu equipo y cargar la empresa demo.</p><div class="grow"><button class="gb pri" id="g-own">Ser el administrador del despacho</button><button class="gb" id="g-out2">Cerrar sesión</button></div>`);outBtn();
+  document.getElementById('g-own').onclick=async()=>{try{await fs.doc('config/owner').set({uid:u.uid,email:u.email||'',at:new Date().toISOString()});await fs.doc('members/'+u.uid).set({name,email:u.email||'',rol:'admin',engs:[],activo:true,at:new Date().toISOString()});afterLogin(u)}catch(e){note(msg(e),true)}};return}
  const isOwner=own.data().uid===u.uid;
+ let first=true;
  fs.doc('members/'+u.uid).onSnapshot(async s=>{MEM=s.exists?s.data():null;const ok=isOwner||(MEM&&MEM.activo);ADMIN=isOwner||(MEM&&MEM.activo&&MEM.rol==='admin');
+  if(ok&&MEM&&MEM.rol==='cliente'&&!isOwner){if(started&&!window.__portal)location.reload();else portalStart();return}
   if(ok){if(!started){fs.collection('members').onSnapshot(q=>{MEMBERS=Object.fromEntries(q.docs.map(d=>[d.id,d.data()]))},()=>{});
-     if(ADMIN)fs.collection('solicitudes').onSnapshot(q=>{REQS=Object.fromEntries(q.docs.map(d=>[d.id,d.data()]));const n=Object.keys(REQS).filter(id=>!MEMBERS[id]||!MEMBERS[id].activo).length;const b=document.getElementById('g-users');if(b)b.textContent='Usuarios del despacho'+(n?` (${n} solicitud${n>1?'es':''})`:'')},()=>{})}
-   start()}
-  else if(started){location.reload()}
-  else{try{await fs.doc('solicitudes/'+u.uid).set({name,email:u.email||'',at:new Date().toISOString()})}catch(e){}
-   say(`<h1>Solicitud enviada</h1><p>Tu cuenta (${H(u.email)}) está en espera de que el administrador del despacho apruebe tu acceso. Esta pantalla se actualizará sola cuando te aprueben.</p><div class="grow"><button class="gb" id="g-out2">Cerrar sesión</button></div>`);document.getElementById('g-out2').onclick=()=>firebase.auth().signOut().then(()=>location.reload())}},e=>say(`<h1>Sin acceso</h1><p>${H(msg(e))}</p>`))}
+     if(ADMIN){fs.collection('solicitudes').onSnapshot(q=>{REQS=Object.fromEntries(q.docs.map(d=>[d.id,d.data()]));const n=Object.keys(REQS).filter(id=>!MEMBERS[id]||!MEMBERS[id].activo).length;const b=document.getElementById('g-users');if(b)b.textContent='Usuarios del despacho'+(n?` (${n} solicitud${n>1?'es':''})`:'')},()=>{});
+      fs.collection('invitaciones').onSnapshot(q=>{INVS=Object.fromEntries(q.docs.map(d=>[d.id,d.data()]))},()=>{})}}
+   start();return}
+  if(started||window.__portal){location.reload();return}
+  if(MEM&&!MEM.activo){say(`<h1>Acceso desactivado</h1><p>El administrador del despacho desactivó tu acceso. Si es un error, comunícate con él.</p><div class="grow"><button class="gb" id="g-out2">Cerrar sesión</button></div>`);outBtn();return}
+  if(!first)return;first=false;
+  if(!u.emailVerified){if(NEWREG){NEWREG=false}verifyScreen(u);return}
+  // invitación personal
+  let inv=null;try{const d=await fs.doc('invitaciones/'+emailOf(u)).get();inv=d.exists?d.data():null}catch(e){}
+  if(inv){try{await fs.doc('members/'+u.uid).set({name,email:emailOf(u),rol:inv.rol,engs:inv.engs||[],activo:true,at:new Date().toISOString(),by:'invitacion'});try{await fs.doc('invitaciones/'+emailOf(u)).update({usada:true,uid:u.uid})}catch(e){}return}catch(e){note(msg(e),true)}}
+  if(!inDomain(u)){say(`<h1>Correo no autorizado</h1><p>El acceso es para correos <b>@${H(DOMINIO)}</b>. Si eres cliente o colaborador externo, pide al despacho que te envíe una invitación a <b>${H(u.email)}</b> y vuelve a entrar.</p><div class="grow"><button class="gb" id="g-out2">Cerrar sesión</button></div>`);outBtn();return}
+  try{await fs.doc('solicitudes/'+u.uid).set({name,email:emailOf(u),at:new Date().toISOString()})}catch(e){}
+  say(`<h1>Solicitud enviada</h1><p>Tu cuenta (${H(u.email)}) está en espera de que el administrador del despacho apruebe tu acceso. Esta pantalla se actualizará sola cuando te aprueben.</p><div class="grow"><button class="gb" id="g-out2">Cerrar sesión</button></div>`);outBtn()},e=>say(`<h1>Sin acceso</h1><p>${H(msg(e))}</p>`))}
+
+/* ---------- portal del cliente ---------- */
+const PEST={pendiente:'Pendiente',entregado:'Entregado',revisado:'Revisado por el despacho',na:'No aplica'};
+let PEID=null,PUNS=[],PD={info:null,req:[],cli:{}};
+const fmtD=s=>{if(!s)return '';const d=new Date(String(s).length===10?s+'T12:00:00':s);return isNaN(d)?String(s):d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})};
+const mon=v=>(+v||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+function portalStart(){window.__portal=true;started=true;gate().style.display='none';const app=document.querySelector('.app');if(app)app.style.display='none';
+ let P=document.getElementById('portal');if(!P){P=document.createElement('div');P.id='portal';document.body.appendChild(P)}
+ try{fs.doc('settings/firm').onSnapshot(s=>{const t=(s.exists&&s.data().tema)||{};const R=document.documentElement;if(t.pri)R.style.setProperty('--navy',t.pri);if(t.acc)R.style.setProperty('--sage',t.acc);PD.firma=(s.exists&&s.data().firma)||'';pRender()},()=>{})}catch(e){}
+ const engs=(MEM&&MEM.engs)||[];PEID=engs.includes(LS.get('aud.peid'))?LS.get('aud.peid'):engs[0]||null;pSub();pRender()}
+function pSub(){PUNS.forEach(f=>f());PUNS=[];PD={...PD,info:null,req:[],cli:{},names:PD.names||{}};if(!PEID)return;const b='eng/'+PEID;
+ PUNS.push(fs.doc(b+'/cli/info').onSnapshot(s=>{PD.info=s.exists?s.data():null;pRender()},()=>pRender()));
+ PUNS.push(fs.collection(b+'/cli').onSnapshot(q=>{PD.cli=Object.fromEntries(q.docs.map(d=>[d.id,dec(d.data())]));pRender()},()=>{}));
+ PUNS.push(fs.collection(b+'/req').onSnapshot(q=>{PD.req=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ord||0)-(b.ord||0));pRender()},()=>{}));
+ (MEM.engs||[]).forEach(id=>{if(PD.names[id])return;fs.doc('eng/'+id+'/cli/info').get().then(s=>{PD.names[id]=s.exists?((s.data().nombre||'')+' · '+(s.data().ejercicio||'')):'Expediente en preparación';pRender()}).catch(()=>{})})}
+function pRender(){const P=document.getElementById('portal');if(!P)return;const I=PD.info;const o=(I&&I.opc)||{};const engs=(MEM&&MEM.engs)||[];const hoy=new Date().toISOString().slice(0,10);
+ const act=document.activeElement;const keep=act&&act.id&&P.contains(act)?{id:act.id,v:act.value,s:act.selectionStart}:null;
+ const R=PD.req;const obs=Object.entries(PD.cli).filter(([,x])=>x.kind==='obs');const adj=Object.entries(PD.cli).filter(([,x])=>x.kind==='adj');const html=k=>PD.cli[k]&&PD.cli[k].html;
+ const pend=R.filter(r=>(r.estado||'pendiente')==='pendiente');
+ P.innerHTML=`<header class="p-top"><div><small>${H(PD.firma||(I&&I.firma)||'Osiris Guadiana · Servicios Contables')}</small><b>Portal del cliente</b></div><div class="p-who">${H((MEM&&MEM.name)||AU.email)}<br><button class="gl" id="p-out">Cerrar sesión</button></div></header>
+ <main class="p-main">
+ ${engs.length>1?`<label class="p-sel">Expediente <select id="p-eng">${engs.map(id=>`<option value="${H(id)}" ${id===PEID?'selected':''}>${H(PD.names[id]||id)}</option>`).join('')}</select></label>`:''}
+ ${!PEID?'<section class="panel"><p>Aún no tienes expedientes asignados. Comunícate con el despacho.</p></section>':!I?'<section class="panel"><p>El despacho aún no publica la información de este expediente. Te avisarán cuando esté lista.</p></section>':`
+ <section class="panel p-head"><h1>${H(I.nombre)}</h1><div class="gsm">RFC ${H(I.rfc||'—')} · Auditoría del ejercicio ${H(I.ejercicio)}${I.pubAt?' · actualizado '+fmtD(I.pubAt):''}</div>
+  ${o.avance&&I.avance!=null?`<div class="p-av"><div class="p-bar"><i style="width:${Math.round(I.avance*100)}%"></i></div><span>Avance de la auditoría: <b>${Math.round(I.avance*100)}%</b>${I.fechaInforme?' · fecha estimada del informe '+fmtD(I.fechaInforme):''}</span></div>`:''}
+  ${I.msg?`<div class="p-msg">${H(I.msg)}</div>`:''}
+  <div class="grow">${I.carpeta?`<a class="gb pri" href="${H(I.carpeta)}" target="_blank" rel="noopener">Abrir carpeta para subir documentos ↗</a>`:''}${I.contacto?`<span class="gsm">Contacto: ${H(I.contacto)}</span>`:''}</div></section>
+ ${o.req!==false?`<section class="panel"><h2>Información solicitada ${pend.length?`<span class="pill warn">${pend.length} pendientes</span>`:'<span class="pill ok">Al corriente</span>'}</h2><p class="gsm">Sube cada documento a la carpeta compartida y márcalo como entregado. Puedes dejar un comentario para el equipo.</p>
+  ${R.length?`<div class="tw"><table><thead><tr><th>#</th><th>Documento o información</th><th>Fecha compromiso</th><th>Estado</th><th>Tu comentario</th><th></th></tr></thead><tbody>${R.map((r,i)=>{const st=r.estado||'pendiente';const v=st==='pendiente'&&r.fecha&&r.fecha<hoy;return `<tr class="${v?'flag':''}"><td>${i+1}</td><td>${H(r.desc)}${r.nota?`<div class="gsm">Nota del despacho: ${H(r.nota)}</div>`:''}</td><td>${fmtD(r.fecha)}${v?'<div class="neg gsm">Vencido</div>':''}</td><td><span class="pill ${st==='pendiente'?'warn':st==='na'?'':'ok'}">${PEST[st]||st}</span>${r.entAt?`<div class="gsm">${fmtD(r.entAt)}</div>`:''}</td><td>${st==='revisado'||st==='na'?H(r.comCli||''):`<input id="pc-${H(r.id)}" value="${H(r.comCli||'')}" placeholder="Opcional">`}</td><td>${st==='pendiente'?`<button class="gb pri" data-ent="${H(r.id)}">Marcar entregado</button>`:st==='entregado'?`<button class="gb" data-undo="${H(r.id)}">Deshacer</button>`:''}</td></tr>`}).join('')}</tbody></table></div>`:'<p class="gsm">El despacho aún no registra requerimientos.</p>'}</section>`:''}
+ ${o.obs&&obs.length?`<section class="panel"><h2>Observaciones y recomendaciones</h2><p class="gsm">Escribe el comentario de la administración: si estás de acuerdo, qué acciones tomarán y en qué fecha. Tu respuesta llega directamente al despacho.</p>${obs.map(([id,x])=>`<article class="p-obs"><h3>${H(x.ref)}. ${H(x.titulo)} <span class="pill ${x.nivel==='Alto'?'bad':x.nivel==='Medio'?'warn':''}">${H(x.nivel)}</span></h3><p><b>Situación observada.</b> ${H(x.condicion)}</p>${x.efecto?`<p><b>Efecto o riesgo.</b> ${H(x.efecto)}</p>`:''}<p><b>Recomendación.</b> ${H(x.recomendacion)}</p>${x.fund?`<p class="gsm"><b>Fundamento.</b> ${H(x.fund)}</p>`:''}
+  <label>Comentario de la administración<textarea id="po-${H(id)}" rows="3">${H(x.resp||'')}</textarea></label><div class="grow"><button class="gb pri" data-resp="${H(id)}">${x.resp?'Actualizar respuesta':'Enviar respuesta'}</button>${x.respAt?`<span class="gsm">Enviada ${fmtD(x.respAt)}</span>`:''}</div></article>`).join('')}</section>`:''}
+ ${o.adj&&adj.length?`<section class="panel"><h2>Ajustes propuestos para su aprobación</h2><p class="gsm">Revisa cada asiento y indica si la administración lo acepta para registrarlo en su contabilidad.</p>${adj.map(([id,x])=>`<article class="p-obs"><h3>${H(x.ref)}. ${H(x.desc)} ${x.aprob?`<span class="pill ${x.aprob==='Aceptado'?'ok':'bad'}">${H(x.aprob)}</span>`:''}</h3>${x.fund?`<p class="gsm">Fundamento: ${H(x.fund)}</p>`:''}<div class="tw"><table><thead><tr><th>Cuenta</th><th>Nombre</th><th class="n">Cargo</th><th class="n">Abono</th></tr></thead><tbody>${(x.lines||[]).map(l=>`<tr><td>${H(l.c)}</td><td>${H(l.n)}</td><td class="n">${l.ca?mon(l.ca):''}</td><td class="n">${l.ab?mon(l.ab):''}</td></tr>`).join('')}</tbody></table></div>
+  <label>Comentario<input id="pa-${H(id)}" value="${H(x.aprobComent||'')}"></label><div class="grow"><button class="gb pri" data-apr="${H(id)}" data-v="Aceptado">Aceptar</button><button class="gb" data-apr="${H(id)}" data-v="Rechazado">No aceptar</button></div></article>`).join('')}</section>`:''}
+ ${[['conf',o.conf],['ef',o.ef],['carta',o.carta],['inf',o.inf]].filter(([k,on])=>on&&html(k)).map(([k])=>`<section class="panel p-doc"><header class="grow" style="justify-content:space-between;margin:0"><h2>${H(PD.cli[k].titulo)}</h2><button class="gb" data-print="${k}">Imprimir o guardar PDF</button></header><div class="p-html" id="ph-${k}">${PD.cli[k].html}</div></section>`).join('')}`}
+ </main>`;
+ const q=s=>P.querySelector(s);q('#p-out').onclick=()=>firebase.auth().signOut().then(()=>location.reload());
+ const se=q('#p-eng');if(se)se.onchange=()=>{PEID=se.value;LS.set('aud.peid',PEID);pSub();pRender()};
+ const who=(MEM&&MEM.name)||AU.email||'Cliente';const now=()=>new Date().toISOString();const b='eng/'+PEID;
+ P.querySelectorAll('[data-ent]').forEach(x=>x.onclick=async()=>{const id=x.dataset.ent;const c=(q('#pc-'+CSS.escape(id))||{}).value||'';try{await fs.doc(b+'/req/'+id).update({estado:'entregado',comCli:c,entAt:now(),entBy:who});note('Marcado como entregado. Gracias.')}catch(e){note(msg(e),true)}});
+ P.querySelectorAll('[data-undo]').forEach(x=>x.onclick=async()=>{try{await fs.doc(b+'/req/'+x.dataset.undo).update({estado:'pendiente',entAt:'',entBy:''})}catch(e){note(msg(e),true)}});
+ P.querySelectorAll('input[id^="pc-"]').forEach(x=>x.onchange=async()=>{const id=x.id.slice(3);try{await fs.doc(b+'/req/'+id).update({comCli:x.value})}catch(e){}});
+ P.querySelectorAll('[data-resp]').forEach(x=>x.onclick=async()=>{const id=x.dataset.resp;const t=q('#po-'+CSS.escape(id)).value.trim();if(!t){note('Escribe el comentario.',true);return}try{await fs.doc(b+'/cli/'+id).update({resp:t,respAt:now(),respBy:who});note('Respuesta enviada al despacho.')}catch(e){note(msg(e),true)}});
+ P.querySelectorAll('[data-apr]').forEach(x=>x.onclick=async()=>{const id=x.dataset.apr;try{await fs.doc(b+'/cli/'+id).update({aprob:x.dataset.v,aprobComent:q('#pa-'+CSS.escape(id)).value,aprobAt:now(),aprobBy:who});note('Decisión enviada al despacho.')}catch(e){note(msg(e),true)}});
+ P.querySelectorAll('[data-print]').forEach(x=>x.onclick=()=>{const el=q('#ph-'+x.dataset.print);const w=window.open('','_blank');if(!w)return;w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${H(PD.cli[x.dataset.print].titulo)}</title><style>body{font-family:Georgia,serif;margin:2cm;color:#111}table{border-collapse:collapse;width:100%;font-size:10pt}td,th{border-bottom:1px solid #ccc;padding:3px 6px;text-align:left}.n,td.n{text-align:right}</style></head><body>${el.innerHTML}</body></html>`);w.document.close();setTimeout(()=>w.print(),300)});
+ if(keep){const el=document.getElementById(keep.id);if(el){el.focus();if(el.value!==keep.v)el.value=keep.v;try{el.setSelectionRange(keep.s,keep.s)}catch(e){}}}}
 
 function init(){const cfg=getCfg();if(!cfg){setupScreen();return}
  if(!window.firebase){say('<h1>Sin conexión</h1><p>No se pudieron cargar los componentes de Firebase. Revisa tu conexión a internet y recarga la página.</p>');return}
@@ -466,7 +572,7 @@ const GC_IND=['Pérdidas recurrentes o capital de trabajo negativo','Flujos de e
 
 /* ================= estado ================= */
 const S={db:null,user:null,assets:null,dl:null,uid:null,me:null,canWrite:true,canEdit:false,
- engs:[],engsLoaded:false,imp:[],ci:{},hrs:{},settings:null,eid:null,eng:null,meta:{map:{},nd:{},tag:{}},tbDocs:{},jrDocs:{},wp:{},adj:[],obs:[],smp:[],conf:[],evd:[],
+ engs:[],engsLoaded:false,imp:[],ci:{},hrs:{},req:[],cli:{},settings:null,eid:null,eng:null,meta:{map:{},nd:{},tag:{}},tbDocs:{},jrDocs:{},wp:{},adj:[],obs:[],smp:[],conf:[],evd:[],
  view:'home',rubro:'A',wpTab:'sum',acc:null,efTab:'sfin',fTab:'isr',unsub:[],ver:0,cache:null,names:{},pendingRender:false};
 const wq={};
 function enqueue(path,fn){wq[path]=(wq[path]||Promise.resolve()).then(fn).catch(e=>{console.error(e);
@@ -476,7 +582,7 @@ const engPath=()=>'eng/'+S.eid;
 function engUpd(patch){if(!canW())return lockedToast();const p=engPath();enqueue(p,()=>S.db.doc(p).update({...patch,...stamp()}))}
 function metaUpd(patch){if(!canW())return lockedToast();const p=engPath()+'/meta/map';enqueue(p,async()=>{const s=await S.db.doc(p).get();return s.exists?S.db.doc(p).update(patch):S.db.doc(p).set({map:{},nd:{},tag:{},line:{},...patch})})}
 const wpMade=new Set();
-function wpDefault(k){const procs={};(PROCS[k]||[]).forEach((p,i)=>{procs['p'+i]={ord:i,asev:p[0],tipo:p[1],txt:p[2],done:false}});return {rubro:k,status:'pendiente',procs,marks:{},tests:{},integ:{},notes:{},concl:'',prep:null,rev:null}}
+function wpDefault(k){const procs={};(PROCS[k]||[]).forEach((p,i)=>{procs['p'+i]={ord:i,asev:p[0],tipo:p[1],txt:p[2],fund:(FUND[k]||[])[i]||'',done:false}});return {rubro:k,status:'pendiente',procs,marks:{},tests:{},integ:{},notes:{},concl:'',prep:null,rev:null}}
 function wpUpd(k,patch){if(!canW())return lockedToast();const p=engPath()+'/wp/'+k;const st=stamp();
  if(!S.wp[k]&&!wpMade.has(p)){wpMade.add(p);enqueue(p,()=>S.db.doc(p).set(deepMerge(wpDefault(k),{...patch,...st})))}
  else enqueue(p,()=>S.db.doc(p).update({...patch,...st}))}
@@ -585,7 +691,7 @@ async function fillNames(){const els=[...document.querySelectorAll('[data-uid]')
  try{const ps=await S.user.profiles(ids);ids.forEach(id=>{S.names[id]=ps[id]&&ps[id].name||'Integrante del despacho'});els.forEach(e=>e.textContent=S.names[e.dataset.uid])}catch(e){}}
 
 /* ================= arranque ================= */
-const VIEWS=[['home','Expedientes',''],['avance','Tablero de avance',''],['hrs','Presupuesto y horas',''],['sep','Encargo'],['plan','Planeación y materialidad','1'],['ci','Control interno','2'],['ins','Insumos y mapeo','3'],['ef','Estados financieros','4'],['wp','Papeles de trabajo','5'],['mue','Muestreo y asientos','6'],['conf','Confirmaciones','7'],['jui','Partes relacionadas y estimaciones','8'],['aj','Ajustes y diferencias','9'],['obs','Observaciones','10'],['fis','Fiscal, ISSIF y dictamen','11'],['cie','Cierre e informes','12'],['sep','Despacho'],['cfg','Marcas y configuración','']];
+const VIEWS=[['home','Expedientes',''],['avance','Tablero de avance',''],['hrs','Presupuesto y horas',''],['sep','Encargo'],['plan','Planeación y materialidad','1'],['ci','Control interno','2'],['ins','Insumos y mapeo','3'],['ef','Estados financieros','4'],['wp','Papeles de trabajo','5'],['mue','Muestreo y asientos','6'],['conf','Confirmaciones','7'],['jui','Partes relacionadas y estimaciones','8'],['aj','Ajustes y diferencias','9'],['obs','Observaciones','10'],['fis','Fiscal, ISSIF y dictamen','11'],['cie','Cierre e informes','12'],['cli','Portal del cliente','13'],['sep','Despacho'],['cfg','Marcas y configuración','']];
 function renderNav(){$('#nav').innerHTML=VIEWS.map(v=>v[0]==='sep'?`<div class="sep">${v[1]}</div>`:`<button data-nav="${v[0]}" class="${S.view===v[0]?'on':''}" ${!S.eid&&!['home','cfg'].includes(v[0])?'disabled style="opacity:.4;cursor:not-allowed"':''}><span class="n">${v[2]}</span>${v[1]}</button>`).join('')}
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(!b||b.disabled)return;go(b.dataset.nav);$('#side').classList.remove('open')});
 function go(v){S.view=v;ls('aud.view',v);renderNav();render();window.scrollTo(0,0)}
@@ -599,11 +705,11 @@ async function boot(){
  $('#who').innerHTML=`${esc(S.me&&S.me.name||'Usuario')}<br><span style="opacity:.7">${S.canEdit?'Editor':S.canWrite?'Colaborador':'Solo lectura'}</span>`;
  const t=setTimeout(()=>{if(!S.engsLoaded){$('#main').innerHTML='<div class="empty">La base compartida aún no responde. Revisa tu conexión; la página se actualizará sola cuando llegue la información.</div>'}},10000);
  db.collection('eng').onSnapshot(s=>{clearTimeout(t);S.engsLoaded=true;S.engs=s.docs.map(d=>({id:d.id,...d.data()}));if(S.eid&&!S.engs.find(e=>e.id===S.eid)){closeEng()}schedule()},e=>{clearTimeout(t);$('#main').innerHTML='<div class="empty">No se pudo leer la lista de expedientes.</div>'});
- db.doc('settings/firm').onSnapshot(s=>{S.settings=s.exists?s.data():null;schedule()},()=>{});
+ db.doc('settings/firm').onSnapshot(s=>{S.settings=s.exists?s.data():null;try{applyTema()}catch(e){}schedule()},()=>{});
  const last=ls('aud.eid');if(last)openEng(last,ls('aud.view')||'avance');else{renderNav();render()}
 }
-function closeEng(){S.unsub.forEach(u=>u());S.unsub=[];S.eid=null;S.eng=null;S.tbDocs={};S.jrDocs={};S.wp={};S.adj=[];S.obs=[];S.smp=[];S.conf=[];S.evd=[];S.imp=[];S.ci={};S.hrs={};S.meta={map:{},nd:{},tag:{}};buildRub();S.ver++;S.view='home';ls('aud.eid','');renderNav();render()}
-function openEng(id,view){S.unsub.forEach(u=>u());S.unsub=[];S.eid=id;ls('aud.eid',id);S.ci={};S.imp=[];S.hrs={};S.tbDocs={};S.jrDocs={};S.wp={};S.adj=[];S.obs=[];S.smp=[];S.conf=[];S.evd=[];S.eng=null;S.ver++;
+function closeEng(){S.unsub.forEach(u=>u());S.unsub=[];S.eid=null;S.eng=null;S.tbDocs={};S.jrDocs={};S.wp={};S.adj=[];S.obs=[];S.smp=[];S.conf=[];S.evd=[];S.imp=[];S.ci={};S.hrs={};S.req=[];S.cli={};S.meta={map:{},nd:{},tag:{}};buildRub();S.ver++;S.view='home';ls('aud.eid','');renderNav();render()}
+function openEng(id,view){S.unsub.forEach(u=>u());S.unsub=[];S.eid=id;ls('aud.eid',id);S.ci={};S.imp=[];S.hrs={};S.req=[];S.cli={};S.tbDocs={};S.jrDocs={};S.wp={};S.adj=[];S.obs=[];S.smp=[];S.conf=[];S.evd=[];S.eng=null;S.ver++;
  const base='eng/'+id;const db=S.db;const bump=()=>{S.ver++;schedule()};
  S.unsub.push(db.doc(base).onSnapshot(s=>{if(!s.exists){if(S.engsLoaded)closeEng();return}S.eng=s.data();buildRub();bump()},()=>{}));
  S.unsub.push(db.doc(base+'/meta/map').onSnapshot(s=>{S.meta=s.exists?s.data():{map:{},nd:{},tag:{}};bump()},()=>{}));
@@ -619,6 +725,8 @@ function openEng(id,view){S.unsub.forEach(u=>u());S.unsub=[];S.eid=id;ls('aud.ei
  col('imp',s=>{S.imp=s.docs.map(d=>({id:d.id,...d.data()}))});
  col('ci',s=>{S.ci=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]))});
  col('hrs',s=>{S.hrs=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]))});
+ col('req',s=>{S.req=s.docs.map(d=>({id:d.id,...d.data()}))});
+ col('cli',s=>{S.cli=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]))});
  S.view=view||'avance';renderNav();render()}
 let rTimer=null;
 function schedule(){clearTimeout(rTimer);rTimer=setTimeout(()=>{const a=document.activeElement;if(a&&$('#main').contains(a)&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.type!=='checkbox'){S.pendingRender=true;return}render()},60)}
@@ -626,11 +734,11 @@ document.addEventListener('focusout',()=>{if(S.pendingRender){S.pendingRender=fa
 
 /* ================= render principal ================= */
 function header(title,sub){const e=S.eng||{};const d=e.datos||{};
- return `<div class="topbar"><div class="row" style="gap:12px"><button class="btn sm menu-btn" data-act="menu" aria-label="Abrir menú">☰ Menú</button><div><h1>${esc(title)}</h1>${sub?`<div class="meta">${sub}</div>`:''}</div></div>
+ return `<div class="topbar"><div class="row" style="gap:12px"><button class="btn sm menu-btn" data-act="menu" aria-label="Abrir menú">☰ Menú</button>${S.view!=='home'||NAVH.length?backBtn():''}<div><h1>${esc(title)}</h1>${sub?`<div class="meta">${sub}</div>`:''}${normLine()}</div></div>
  ${S.eid?`<div class="meta" style="text-align:right"><b style="color:var(--fg)">${esc(d.nombre||'Expediente')}</b>${e.demo?' <span class="pill warn">Demostración</span>':''}${e.estado==='cerrado'?' <span class="pill ok">Cerrado · solo lectura</span>':''}<br>RFC ${esc(d.rfc||'—')} · Ejercicio ${esc(d.ejercicio||'—')}</div>`:''}</div>`}
 function render(){const v=S.view;const m=$('#main');
  if(S.eid&&!S.eng&&v!=='home'&&v!=='cfg'){m.innerHTML=header('Abriendo expediente…')+'<div class="empty">Cargando información del expediente.</div>';return}
- const fn=({home:vHome,avance:vAvance,plan:vPlan,ci:vCI,hrs:vHrs,jui:vJui,ins:vIns,ef:vEF,wp:vWP,mue:vMue,conf:vConf,aj:vAj,obs:vObs,fis:vFis,cie:vCie,cfg:vCfg})[v]||vHome;
+ const fn=({home:vHome,avance:vAvance,plan:vPlan,ci:vCI,cli:vCli,hrs:vHrs,jui:vJui,ins:vIns,ef:vEF,wp:vWP,mue:vMue,conf:vConf,aj:vAj,obs:vObs,fis:vFis,cie:vCie,cfg:vCfg})[v]||vHome;
  try{m.innerHTML=fn()}catch(e){console.error(e);m.innerHTML=header('Error')+`<div class="note bad">Ocurrió un error al mostrar esta sección: ${esc(e.message)}</div>`}
  if(!S.canWrite||(isLocked()&&!['home','cfg'].includes(S.view)))m.querySelectorAll('input,select,textarea,button[data-w]').forEach(x=>x.disabled=true);
  fillNames()}
@@ -671,7 +779,7 @@ ACT.newEng=()=>{const y=new Date().getFullYear()-1;const m=modal('Nuevo expedien
   const id='e'+rid();try{await S.db.doc('eng/'+id).set({datos:{nombre:n,rfc:m.querySelector('#ne-r').value.trim().toUpperCase(),ejercicio:m.querySelector('#ne-y').value,cierre:m.querySelector('#ne-c').value,marco:m.querySelector('#ne-m').value,tipo},estado:'proceso',createdAt:nowIso(),createdBy:S.uid||'',mat:{metodo:'escala',pmPct:.9,amptPct:.05},tc:{fuente:'DOF'},risks:{},...stamp()});m.remove();openEng(id,'plan')}catch(e){toast('No se pudo crear el expediente. Verifica que tengas permiso de colaborador.')}}};
 ACT.delEng=b=>{const e=S.engs.find(x=>x.id===b.dataset.id);ask(`Se eliminará <b>${esc(e&&e.datos&&e.datos.nombre)}</b> con todas sus cédulas, ajustes, observaciones y evidencia. Esta acción no se puede deshacer.`,'Eliminar expediente',()=>deleteEng(b.dataset.id),true)};
 async function deleteEng(id){toast('Eliminando expediente…');try{const base='eng/'+id;
- for(const c of ['tb','jr','wp','adj','obs','smp','conf','evd','meta','imp','ci','hrs']){const s=await S.db.collection(base+'/'+c).get();
+ for(const c of ['tb','jr','wp','adj','obs','smp','conf','evd','meta','imp','ci','hrs','req','cli']){const s=await S.db.collection(base+'/'+c).get();
    if(c==='evd'&&S.assets)for(const d of s.docs){const a=d.data();if(a.assetId){try{await S.assets.delete(a.assetId)}catch(e){}}}
    for(let i=0;i<s.docs.length;i+=6)await Promise.all(s.docs.slice(i,i+6).map(d=>S.db.doc(base+'/'+c+'/'+d.id).delete()))}
  await S.db.doc(base).delete();if(S.eid===id)closeEng();toast('Expediente eliminado.')}catch(e){toast('No se pudo eliminar por completo. Vuelve a intentarlo.')}}
@@ -692,6 +800,7 @@ function vAvance(){const C=calc(),M=mat();
   <div class="tile"><small>Notas de revisión abiertas</small><b>${openN}</b><span>${openN?'Pendientes de atender':'Sin pendientes'}</span></div>
   <div class="tile"><small>Materialidad global</small><b>${money0(M.g)}</b><span>Ejecución ${money0(M.ej)} · AMPT ${money0(M.am)}</span></div>
   <div class="tile"><small>Diferencias no ajustadas</small><b class="${Math.abs(sud)>=M.g?'neg':''}">${money0(sud)}</b><span>${M.g?pc(Math.abs(sud)/M.g)+' de la materialidad':''}</span></div>
+  <div class="tile"><small>Requerimientos al cliente</small><b>${(S.req||[]).filter(r=>(r.estado||'pendiente')==='pendiente').length}</b><span>pendientes de ${(S.req||[]).length} · ${(S.req||[]).filter(r=>r.estado==='entregado').length} entregados por revisar</span></div>
   <div class="tile"><small>Horas</small><b>${NF0.format(hrsEntries().reduce((t,e)=>t+(+e.h||0),0))} / ${NF0.format(Object.values(S.eng.budget||{}).reduce((t,v)=>t+(+v||0),0))}</b><span>reales contra presupuestadas</span></div>
   <div class="tile"><small>Control interno</small><b>${CI_CYC.filter(c=>ciStats(c.k).concl).length} / ${CI_CYC.length}</b><span>ciclos concluidos · ${CI_CYC.reduce((t,c)=>t+ciStats(c.k).defs.length,0)} deficiencias</span></div>
   <div class="tile"><small>Mapeo de cuentas</small><b class="${C.npend||C.unm?'neg':''}">${C.npend+C.unm}</b><span>${C.npend} por confirmar · ${C.unm} sin sumaria · ${C.nher} heredadas</span></div>
@@ -1043,6 +1152,155 @@ function extraSheets(){const C=calc();const out=[];const eq=S.eng.equipo||{};con
  const q=S.eng.eqr||{};const eqr=xlsHead('Revisión de control de calidad').concat([['Requerida',eqrReq()?'Sí':'No']]);EQR_L.forEach((l,i)=>eqr.push([l,(q.chk||{})['c'+i]?'Revisado':'Pendiente']));eqr.push([],['Firma',q.firma?(S.names[q.firma.by]||'')+' '+fdate(q.firma.at):'Pendiente']);out.push(['Control de calidad',eqr]);
  const A=hrsAreas();const hr=xlsHead('Presupuesto y horas').concat([['Fecha','Integrante','Área','Horas','Actividad']]);hrsEntries().forEach(e=>hr.push([e.f,S.names[e.uid]||e.uid,(A.find(a=>a[0]===e.area)||[])[1]||e.area,+e.h||0,e.d||'']));out.push(['Horas',hr]);return out}
 
+/* ================= fundamentación normativa ================= */
+// Fundamento por procedimiento, alineado con PROCS (mismo rubro y posición). Los artículos de ley y reglas deben verificarse contra el texto vigente del ejercicio.
+const FUND={
+ A:['NIF C-1; NIA 500','NIA 505','NIF C-1; NIA 500','NIA 500 (corte); NIF C-1','NIF B-15; CFF 20','NIA 500; NIA 501','LISR 27 fr. III'],
+ B:['NIA 505','NIF C-16; NIA 540','NIF D-1; NIA 500','NIA 500; NIA 560','CFF 29 y 29-A; LIVA 1-B; RMF (complemento de pago)','NIF C-13; NIA 550','LISR 140; NIF C-3','CFF 22 y 23; LIVA 6'],
+ C:['NIA 501','NIF C-4','NIF C-4; NIA 540','NIA 500; NIF C-4','LISR 39 y 76 fr. XIII'],
+ D:['NIF C-5','LIVA 1-B y 5; CFF 29-A; RMF (CFDI de anticipos)'],
+ L:['NIF C-8','NIF C-15'],
+ U:['NIF C-6; NIA 500','NIF C-6','NIF C-6; NIA 540','NIA 500 (derechos y obligaciones)','LISR 31 a 36','NIF C-15'],
+ AA:['NIA 505; NIF C-19','NIF C-19; NIF B-6','NIF C-19; NIA 570','LISR 28 fr. XXVII y XXXII'],
+ BB:['NIA 560; NIA 500','NIA 505','NIA 500; NIF C-19','NIF B-15','LISR 27 fr. V y XVIII; LIVA 5 fr. III; CFF 29-A','NIA 550; NIF C-13'],
+ DD:['NIF C-9; NIA 500','NIF C-9; NIA 540','NIF D-3; NIA 620','LFT 76, 80 y 87; NIF D-3'],
+ EE:['CFF 6; NIA 500','NIF C-9','LISR 96, 106, 116 y 113-J; LIVA 1-A','LSS 39 y 40; LINFONAVIT 29','LIVA 1, 1-A, 5 y 5-D','Ley de Hacienda del Estado (impuesto sobre nóminas)'],
+ FF:['LISR 9 y 76','NIF D-4'],
+ GG:['LFT 117 a 131; LISR 9; NIF D-3','LFT 122'],
+ JJ:['NIA 505; NIF C-19'],
+ TT:['LGSM 128, 178 a 194; NIA 500','LISR 77 y 78','NIF B-4; NIF C-11'],
+ '10':['NIA 520','NIA 500; NIF D-1','NIA 500; NIA 530','CFF 29 y 29-A; LISR 16 y 17; LIVA 1 y 17','NIF D-1; NIA 240'],
+ '20':['NIA 520','NIA 530','LISR 27 fr. V y 99; LSS 15; LINFONAVIT 29','LISR 25 fr. II, 27 y 39; CFF 29-A'],
+ '35':['NIA 520','NIA 530; LISR 27','LISR 28'],
+ '40':['NIA 520','NIA 530; LISR 27 fr. I; CFF 69-B','LISR 28; LISR 76 fr. XVIII','LISR 27 fr. V y 99; LSS 15'],
+ '50':['NIF C-19; NIA 520','NIF B-15','LISR 44 a 46'],
+ '60':['NIF B-3; NIA 500','NIF C-6; LISR 31'],
+ '90':['LISR 9 y 76; NIF D-4','NIF D-4; NIF D-3; LFT 117']};
+// Marco normativo aplicable por rubro (nivel 2)
+const RUB_NORM={A:'NIF C-1, NIF B-15 · NIA 500, 505',B:'NIF C-3, C-16, C-20, D-1, C-13 · NIA 505, 540, 550',C:'NIF C-4 · NIA 501, 540',D:'NIF C-5',L:'NIF C-8, C-15',U:'NIF C-6, C-15, D-5 · NIA 500, 540',AA:'NIF C-19, B-6 · NIA 505, 570',BB:'NIF C-19, B-15 · NIA 505, 560',DD:'NIF C-9, D-3 · NIA 540, 620',EE:'NIF C-9 · CFF, LISR, LIVA, LSS, LINFONAVIT y leyes estatales',FF:'NIF D-4 · LISR',GG:'NIF D-3 · LFT 117 a 131, LISR 9',JJ:'NIF C-19, B-6 · NIA 505',TT:'NIF C-11, B-4 · LGSM · LISR 77 y 78','10':'NIF D-1 · NIA 240, 520','20':'NIF C-4 · NIA 520, 530','35':'NIF B-3 · NIA 520, 530','40':'NIF B-3 · NIA 520, 530','60':'NIF B-3','50':'NIF C-19, B-15 · LISR 44 a 46','90':'NIF D-4, D-3 · LISR 9'};
+// Normativa por sección del expediente (encabezado de cada vista)
+const SEC_NORM={plan:'NIA 210, 220, 300, 315 y 320 · Código de Ética IMCP',ci:'NIA 315, 265 y 330 · NIA 240 (fraude)',ins:'NIA 230 y 500',ef:'NIF A-7, B-2, B-3, B-4, B-6 · NIA 520',wp:'NIA 230, 330 y 500',mue:'NIA 530 · NIA 240 (asientos de diario)',conf:'NIA 505',jui:'NIA 550 y 540 · NIF C-13',aj:'NIA 450',obs:'NIA 265 y 260',fis:'CFF 32-A, 32-H y 52 · RCFF · RMF (ISSIF y dictamen)',cie:'NIA 560, 570, 580, 700, 705 y 706',hrs:'NIA 220 · NGC 1',cli:'NIA 210 y 260',avance:'NIA 220 y 230'};
+const FUNDA_DEF='https://claude.ai/artifact/J3PcXj7imNE5pcZn9qTRNV';
+const fundaUrl=()=>(S.settings&&S.settings.fundaUrl)||FUNDA_DEF;
+function procFund(k,p){if(p.fund!=null)return p.fund;const L=PROCS[k]||[];const i=L.findIndex(x=>x[2]===p.txt);return i>=0&&FUND[k]?(FUND[k][i]||''):''}
+function rubNorm(k){const o=(S.settings&&S.settings.fundRub)||{};return o[k]!=null?o[k]:(RUB_NORM[k]||'')}
+function fundBtn(q){return `<button class="btn sm ghost" data-act="fdm" data-q="${esc(q||'')}" title="Copia el fundamento y abre Fundamenta">Fundamenta ↗</button>`}
+ACT.fdm=b=>{const q=(b.dataset.q||'').trim();try{navigator.clipboard&&q&&navigator.clipboard.writeText(q)}catch(e){}window.open(fundaUrl(),'_blank','noopener');if(q)toast('Copiado: '+q+' · pégalo en el buscador de Fundamenta.',4000)};
+function normLine(){const n=SEC_NORM[S.view];return n?`<div class="norm"><span>Normativa:</span> ${esc(n)} ${fundBtn(n)}</div>`:''}
+function rubNormPanel(k){const n=rubNorm(k);if(!n)return '';return `<div class="norm"><span>Marco normativo de ${esc(k)}:</span> ${esc(n)} ${fundBtn(n)}</div>`}
+function fundRubPanel(){const o=(S.settings&&S.settings.fundRub)||{};const dis=S.canEdit?'':'disabled';
+ return `<section class="panel"><header><h2>Fundamentación</h2>${S.canEdit?'':'<span class="pill">Solo editores pueden modificarlo</span>'}</header>
+ <div class="hint">Marco normativo que aparece en cada cédula sumaria. Los números de NIF y NIA son estables; los artículos de ley y las reglas de la RMF cambian con las reformas: verifícalos cada ejercicio contra el texto vigente.</div>
+ <label class="f" style="max-width:520px">Dirección de Fundamenta (botón «Fundamenta ↗»)<input id="fd-url" value="${esc(fundaUrl())}" ${dis}></label>
+ <div class="tw" style="max-height:360px"><table><thead><tr><th>Rubro</th><th>Marco normativo</th></tr></thead><tbody>${RUB.map(r=>`<tr><td class="ref">${esc(r.k)} · ${esc(r.n)}</td><td><input id="fr-${esc(r.k)}" value="${esc(o[r.k]!=null?o[r.k]:(RUB_NORM[r.k]||''))}" ${dis}></td></tr>`).join('')}</tbody></table></div>
+ ${S.canEdit?'<div class="row"><button class="btn pri sm" data-act="fundSave">Guardar fundamentación</button></div>':''}</section>`}
+ACT.fundSave=async()=>{const fr={};RUB.forEach(r=>{const el=$('#fr-'+CSS.escape(r.k));if(el)fr[r.k]=el.value});try{await S.db.doc('settings/firm').set({...(S.settings||{}),fundRub:fr,fundaUrl:$('#fd-url').value.trim(),...stamp()});toast('Fundamentación guardada.')}catch(e){toast('Solo los editores pueden guardar.')}};
+// Fundamento de cada informe (nivel 4)
+const DOC_FUND={opinion:'Normas Internacionales de Auditoría 700 (Revisada), 705 (Revisada), 706 (Revisada), 701 cuando aplica, 570 (Revisada) y 560; Código de Ética Profesional del IMCP.',repr:'NIA 580 «Manifestaciones escritas» y NIA 560 «Hechos posteriores al cierre».',obs:'NIA 265 «Comunicación de las deficiencias en el control interno» y NIA 260 (Revisada) «Comunicación con los responsables del gobierno de la entidad».',sud:'NIA 450 «Evaluación de las incorrecciones identificadas durante la realización de la auditoría».',carta:'NIA 210 «Acuerdo de los términos del encargo de auditoría»; NGC 1 y NIA 220; para el dictamen fiscal y el ISSIF, CFF artículos 32-A, 32-H y 52, su Reglamento y la RMF vigente.'};
+const docFundHtml=k=>DOC_FUND[k]?`<p style="font-size:9pt;color:#555;margin-top:18pt;border-top:1px solid #bbb;padding-top:6pt">Fundamento normativo: ${esc(DOC_FUND[k])}</p>`:'';
+
+/* ================= navegación: botón Regresar e historial ================= */
+let NAVH=[],NAVBUSY=false,NAVHIST=true;
+function navSnap(){const t={};for(const k in S)if(/(Tab|Cyc|Base)$/.test(k)&&(typeof S[k]==='string'||S[k]==null))t[k]=S[k];return {view:S.view,eid:S.eid,rubro:S.rubro,acc:S.acc,t,y:window.scrollY||0}}
+const navSame=(a,b)=>a.view===b.view&&a.eid===b.eid&&a.rubro===b.rubro&&a.acc===b.acc&&JSON.stringify(a.t)===JSON.stringify(b.t);
+function navPush(prev){if(NAVBUSY||!prev)return;const cur=navSnap();if(navSame(prev,cur))return;NAVH.push(prev);if(NAVH.length>80)NAVH.shift();if(NAVHIST){try{history.pushState({aud:NAVH.length},'')}catch(e){NAVHIST=false}}const b=$('#nav-back');if(b)b.disabled=false}
+function navBack(){const p=NAVH.pop();if(!p)return;NAVBUSY=true;try{Object.keys(p.t).forEach(k=>S[k]=p.t[k]);S.rubro=p.rubro;S.acc=p.acc;
+ if(p.eid&&p.eid!==S.eid){openEng(p.eid,p.view)}else if(!p.eid&&S.eid&&p.view==='home'){closeEng()}else{S.view=p.view;ls('aud.view',p.view);renderNav();render()}
+ setTimeout(()=>window.scrollTo(0,p.y||0),40)}finally{NAVBUSY=false}}
+ACT.back=()=>{if(NAVHIST&&history.state&&history.state.aud)history.back();else navBack()};
+addEventListener('popstate',()=>{if(NAVH.length)navBack()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act],[data-nav]');if(!b||b.dataset.act==='back')return;const prev=navSnap();setTimeout(()=>navPush(prev),0)},true);
+document.addEventListener('change',e=>{if(!e.target.closest('[data-ch]'))return;const prev=navSnap();setTimeout(()=>navPush(prev),0)},true);
+addEventListener('keydown',e=>{if(e.altKey&&e.key==='ArrowLeft'&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){e.preventDefault();ACT.back()}});
+const backBtn=()=>`<button class="btn sm" id="nav-back" data-act="back" ${NAVH.length?'':'disabled'} title="Regresar a la pantalla anterior (Alt + ←)">← Regresar</button>`;
+
+/* ================= apariencia: tema y colores ================= */
+const TEMA_DEF={modo:'auto',pri:'#1F3557',acc:'#7F9C7A',side:'',letra:'normal'};
+const hex2rgb=h=>{h=String(h||'').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return isNaN(n)||h.length!==6?null:[n>>16&255,n>>8&255,n&255]};
+const rgb2hex=c=>'#'+c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const mixC=(a,b,t)=>{const x=hex2rgb(a),y=hex2rgb(b);if(!x||!y)return a;return rgb2hex(x.map((v,i)=>v+(y[i]-v)*t))};
+function lum(h){const c=hex2rgb(h);if(!c)return 0;const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2])}
+const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+const inkFor=bg=>contrast(bg,'#FFFFFF')>=contrast(bg,'#10161F')?'#FFFFFF':'#10161F';
+function readable(fg,bg,min){let c=fg;const dark=lum(bg)<.4;for(let i=0;i<20&&contrast(c,bg)<min;i++)c=mixC(c,dark?'#FFFFFF':'#000000',.12);return c}
+function temaCur(){const firm=(S.settings&&S.settings.tema)||{};let mine={};try{mine=JSON.parse(ls('aud.tema')||'{}')||{}}catch(e){}return {...TEMA_DEF,...firm,...mine,_firm:firm,_mine:mine}}
+function isDark(modo){return modo==='oscuro'||(modo==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches)}
+function applyTema(){const t=temaCur();const R=document.documentElement;const dark=isDark(t.modo);R.dataset.theme=dark?'dark':'light';
+ const bg=dark?'#0E151E':'#F3F6F4',surf=dark?'#15202C':'#FFFFFF';
+ const pri=dark?readable(mixC(t.pri,'#FFFFFF',.55),surf,4.5):readable(t.pri,surf,4.5);
+ const acc=dark?mixC(t.acc,'#FFFFFF',.2):t.acc;
+ const side=t.side||t.pri;const sideBg=dark?mixC(side,'#000000',.55):side;
+ const v={'--navy':pri,'--navy-ink':inkFor(pri),'--sage':acc,'--sage-ink':inkFor(acc),'--sage-soft':dark?mixC(acc,'#000000',.7):mixC(acc,'#FFFFFF',.78),'--side':sideBg,'--side-ink':inkFor(sideBg),'--side-on':acc,'--side-on-ink':inkFor(acc)};
+ Object.entries(v).forEach(([k,x])=>R.style.setProperty(k,x));R.style.fontSize=t.letra==='grande'?'16px':t.letra==='muygrande'?'17.5px':'';return t}
+addEventListener('load',()=>{try{applyTema();matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTema)}catch(e){}});
+function temaPanel(){const t=temaCur();const f=t._firm||{};const sw=(id,l,v)=>`<label class="f">${l}<input type="color" id="${id}" value="${esc(v)}" style="height:36px;padding:2px"></label>`;
+ const chk=[['Texto de botones principales',contrast(inkFor(t.pri),t.pri)],['Menú lateral',contrast(inkFor(t.side||t.pri),t.side||t.pri)],['Opción seleccionada del menú',contrast(inkFor(t.acc),t.acc)],['Enlaces y títulos sobre fondo claro',contrast(t.pri,'#FFFFFF')]];
+ return `<section class="panel"><header><h2>Apariencia</h2><span class="hint">Cambia solo en tu pantalla. ${S.canEdit?'Como editor puedes guardarla también como la del despacho, para todos.':''}</span></header>
+ <div class="form"><label class="f">Modo<select id="tm-modo">${[['auto','Automático (según Windows)'],['claro','Claro'],['oscuro','Oscuro']].map(([k,l])=>`<option value="${k}" ${t.modo===k?'selected':''}>${l}</option>`).join('')}</select></label>
+ <label class="f">Tamaño de letra<select id="tm-letra">${[['normal','Normal'],['grande','Grande'],['muygrande','Muy grande']].map(([k,l])=>`<option value="${k}" ${t.letra===k?'selected':''}>${l}</option>`).join('')}</select></label>
+ ${sw('tm-pri','Color principal (botones, títulos)',t.pri)}${sw('tm-acc','Color de acento (selección)',t.acc)}${sw('tm-side','Fondo del menú lateral',t.side||t.pri)}</div>
+ <div class="tw" style="max-width:620px"><table><thead><tr><th>Contraste</th><th class="n">Relación</th><th>Lectura</th></tr></thead><tbody>${chk.map(([l,r])=>`<tr><td>${l}</td><td class="n">${r.toFixed(1)} : 1</td><td>${r>=4.5?'<span class="pill ok">Buena</span>':r>=3?'<span class="pill warn">Justa</span>':'<span class="pill bad">Difícil de leer</span>'}</td></tr>`).join('')}</tbody></table></div>
+ <div class="hint">El aplicativo ajusta solo el color de las letras sobre cada fondo (blanco u oscuro) para que siempre se lean. Se recomienda una relación de 4.5 : 1 o más.</div>
+ <div class="row"><button class="btn pri sm" data-act="temaMine">Aplicar en mi pantalla</button><button class="btn sm" data-act="temaReset">Volver a los colores del despacho</button>${S.canEdit?'<button class="btn sm" data-act="temaFirm">Guardar como colores del despacho</button>':''}</div></section>`}
+const temaRead=()=>({modo:$('#tm-modo').value,letra:$('#tm-letra').value,pri:$('#tm-pri').value,acc:$('#tm-acc').value,side:$('#tm-side').value});
+ACT.temaMine=()=>{ls('aud.tema',JSON.stringify(temaRead()));applyTema();render();toast('Apariencia aplicada en tu pantalla.')};
+ACT.temaReset=()=>{ls('aud.tema','{}');applyTema();render();toast('Se restablecieron los colores del despacho.')};
+ACT.temaFirm=async()=>{const t=temaRead();try{await S.db.doc('settings/firm').set({...(S.settings||{}),tema:{pri:t.pri,acc:t.acc,side:t.side,modo:'auto',letra:'normal'},...stamp()});ls('aud.tema',JSON.stringify({modo:t.modo,letra:t.letra}));applyTema();toast('Colores del despacho guardados para todo el equipo.')}catch(e){toast('Solo los editores pueden cambiar los colores del despacho.')}};
+
+/* ================= portal del cliente (lado del equipo) ================= */
+const REQ_EST={pendiente:'Pendiente',entregado:'Entregado por el cliente',revisado:'Revisado',na:'No aplica'};
+const REQ_BASE=[['Balanza de comprobación al cierre y auxiliares de todas las cuentas','INS'],['Estados de cuenta bancarios de diciembre y enero, y conciliaciones al cierre','A'],['Arqueo y responsables de fondos fijos','A'],['Reporte de antigüedad de saldos de clientes al cierre','B'],['Integración de deudores diversos, funcionarios y empleados','B'],['Inventario físico al cierre, método de valuación y reporte de lento movimiento','C'],['Pólizas de seguro y contratos de pagos anticipados','D'],['Auxiliar de activo fijo con altas, bajas, facturas y pedimentos','U'],['Contratos y estados de cuenta de créditos bancarios','AA'],['Reporte de antigüedad de proveedores y facturas recibidas en enero','BB'],['Estudio actuarial de prima de antigüedad y beneficios a empleados','DD'],['Declaraciones y acuses de pagos provisionales, retenciones, IVA, IMSS e impuestos estatales','EE'],['Cálculo del ISR y PTU del ejercicio y declaración anual','FF'],['Actas de asamblea y del consejo, libro de registro de acciones','TT'],['Contratos relevantes y con partes relacionadas; estudio de precios de transferencia','JUI'],['Relación de juicios y litigios; datos de los abogados','CIE'],['Carta de representación firmada','CIE']];
+const CLI_OPC=[['req','Requerimientos de información',true],['obs','Observaciones para su respuesta',true],['avance','Avance general del encargo',true],['conf','Confirmaciones de terceros',false],['adj','Ajustes propuestos para su aprobación',false],['ef','Estados financieros auditados',false],['carta','Carta convenio',false],['inf','Informe de los auditores',false]];
+function cliOpc(){const o=(S.eng&&S.eng.portal&&S.eng.portal.opc)||{};return Object.fromEntries(CLI_OPC.map(([k,,d])=>[k,o[k]!=null?!!o[k]:d]))}
+const reqList=()=>(S.req||[]).slice().sort((a,b)=>(a.ord||0)-(b.ord||0));
+function subUpd(col,id,patch){if(!canW())return lockedToast();const p=engPath()+'/'+col+'/'+id;enqueue(p,()=>S.db.doc(p).update({...patch,...stamp()}))}
+function vCli(){const t=S.cliTab||'req';const T=[['req','Requerimientos de información'],['pub','Qué ve el cliente'],['resp','Respuestas del cliente']];
+ const local=!!window.__audShim;
+ return header('Portal del cliente','Requerimientos de información, comunicación de observaciones y lo que el cliente puede consultar.')+
+ (local?'':'<div class="note">El acceso de los clientes funciona en la versión del despacho publicada en GitHub. Aquí puedes preparar los requerimientos y lo que verá.</div>')+
+ `<div class="tabs">${T.map(x=>`<button data-act="cliTab" data-t="${x[0]}" class="${t===x[0]?'on':''}">${x[1]}</button>`).join('')}</div>`+(t==='pub'?cliPub():t==='resp'?cliResp():cliReq())}
+ACT.cliTab=b=>{S.cliTab=b.dataset.t;render()};
+function cliReq(){const R=reqList();const hoy=new Date().toISOString().slice(0,10);const areas=[['','General'],['INS','Insumos'],...RUB.map(r=>[r.k,r.k+' · '+r.n]),['JUI','Partes relacionadas y estimaciones'],['CIE','Cierre']];
+ const pend=R.filter(r=>(r.estado||'pendiente')==='pendiente').length,venc=R.filter(r=>(r.estado||'pendiente')==='pendiente'&&r.fecha&&r.fecha<hoy).length,ent=R.filter(r=>r.estado==='entregado').length;
+ return `<section class="panel"><header><h2>Requerimientos de información</h2><div class="row"><button class="btn sm" data-act="reqBase" data-w>Cargar lista base</button><button class="btn sm pri" data-act="reqAdd" data-w>Agregar requerimiento</button></div></header>
+ <div class="hint">Lo que pides al cliente, con fecha compromiso. El cliente lo ve en su portal, marca lo que entrega y deja comentarios; tú lo marcas como revisado. Los documentos los sube a su carpeta compartida de OneDrive.</div>
+ <div class="row"><span class="pill">${R.length} requerimientos</span><span class="pill warn">${pend} pendientes</span>${venc?`<span class="pill bad">${venc} vencidos</span>`:''}<span class="pill ok">${ent} entregados por revisar</span></div>
+ ${R.length?`<div class="tw"><table><thead><tr><th>#</th><th style="min-width:280px">Documento o información</th><th>Área</th><th>Fecha compromiso</th><th>Estado</th><th>Comentario del cliente</th><th>Nota del equipo</th><th>Ref.</th><th></th></tr></thead><tbody>${R.map((r,i)=>{const st=r.estado||'pendiente';const v=st==='pendiente'&&r.fecha&&r.fecha<hoy;return `<tr class="${v?'flag':''}"><td class="small">${i+1}</td><td><textarea data-ch="reqF" data-id="${r.id}" data-f="desc" id="rq-${r.id}-d" style="min-height:40px">${esc(r.desc||'')}</textarea></td><td><select data-ch="reqF" data-id="${r.id}" data-f="area" id="rq-${r.id}-a" style="width:150px">${areas.map(([k,l])=>`<option value="${esc(k)}" ${(r.area||'')===k?'selected':''}>${esc(l)}</option>`).join('')}</select></td><td><input type="date" data-ch="reqF" data-id="${r.id}" data-f="fecha" id="rq-${r.id}-f" value="${esc(r.fecha||'')}">${v?'<div class="small neg">Vencido</div>':''}</td><td><select data-ch="reqF" data-id="${r.id}" data-f="estado" id="rq-${r.id}-e" style="width:170px">${Object.entries(REQ_EST).map(([k,l])=>`<option value="${k}" ${st===k?'selected':''}>${l}</option>`).join('')}</select>${r.entAt?`<div class="small muted">${esc(r.entBy||'Cliente')} · ${fdt(r.entAt)}</div>`:''}</td><td class="small">${esc(r.comCli||'')}</td><td><input data-ch="reqF" data-id="${r.id}" data-f="nota" id="rq-${r.id}-n" value="${esc(r.nota||'')}" style="width:170px"></td><td><input data-ch="reqF" data-id="${r.id}" data-f="ref" id="rq-${r.id}-r" value="${esc(r.ref||'')}" style="width:70px"></td><td><button class="btn sm dng" data-act="reqDel" data-id="${r.id}" data-w aria-label="Quitar">✕</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Sin requerimientos. Carga la lista base o agrega los tuyos.</div>'}</section>`}
+CH.reqF=el=>subUpd('req',el.dataset.id,{[el.dataset.f]:el.value});
+ACT.reqAdd=()=>subSet('req','r'+rid(),{ord:Date.now(),desc:'',area:'',fecha:'',estado:'pendiente'});
+ACT.reqDel=b=>ask('Se quitará el requerimiento también del portal del cliente.','Quitar',()=>subDel('req',b.dataset.id),true);
+ACT.reqBase=()=>{const have=new Set(reqList().map(r=>r.desc));let n=Date.now();const add=REQ_BASE.filter(([d])=>!have.has(d));if(!add.length){toast('La lista base ya está cargada.');return}add.forEach(([d,a])=>subSet('req','r'+rid(),{ord:n++,desc:d,area:a,fecha:'',estado:'pendiente'}));toast(`Se agregaron ${add.length} requerimientos.`)};
+function cliPub(){const P=(S.eng.portal)||{};const o=cliOpc();const obsC=S.obs.filter(x=>x.comunicar);const adjP=S.adj.filter(a=>a.estado==='propuesto'||!a.estado);
+ return `<section class="panel"><header><h2>Qué ve el cliente</h2>${P.pubAt?`<span class="pill ok">Publicado ${fdt(P.pubAt)}</span>`:'<span class="pill warn">Sin publicar</span>'}</header>
+ <div class="hint">Por defecto el cliente ve sus requerimientos, las observaciones que marques para comunicarle y el avance general. Activa lo demás cuando corresponda. El cliente nunca ve cédulas, materialidad, riesgos, notas de revisión ni otros expedientes.</div>
+ <div style="display:flex;flex-direction:column;gap:6px">${CLI_OPC.map(([k,l,d])=>`<label class="chk"><input type="checkbox" data-ch="cliOpc" data-k="${k}" ${o[k]?'checked':''}> ${esc(l)}${d?' <span class="small muted">(por defecto)</span>':''}${k==='obs'?` <span class="small muted">· ${obsC.length} marcadas para comunicar</span>`:k==='adj'?` <span class="small muted">· ${adjP.length} propuestos</span>`:''}</label>`).join('')}</div>
+ <div class="form"><label class="f wide">Carpeta compartida de OneDrive para sus documentos (enlace)<input data-ch="eng" data-f="portal.carpeta" id="pt-carp" value="${esc(P.carpeta||'')}" placeholder="https://1drv.ms/f/…"></label>
+ <label class="f">Contacto del despacho<input data-ch="eng" data-f="portal.contacto" id="pt-cont" value="${esc(P.contacto||'')}" placeholder="Nombre, correo y teléfono"></label>
+ <label class="f wide">Mensaje para el cliente<textarea data-ch="eng" data-f="portal.msg" id="pt-msg">${esc(P.msg||'')}</textarea></label></div>
+ <div class="hint">Los requerimientos se actualizan solos. Lo demás (avance, observaciones, ajustes, estados financieros, carta e informe) se envía al portal cuando pulsas «Publicar».</div>
+ <div class="row"><button class="btn pri" data-act="cliPublish" data-w>Publicar en el portal del cliente</button></div></section>`}
+CH.cliOpc=el=>engUpd({portal:{opc:{[el.dataset.k]:el.checked}}});
+function cleanHtml(h){const d=document.createElement('div');d.innerHTML=h;d.querySelectorAll('button,.btn,.tabs,.chips,.topbar,.hint,input[type=file],.note').forEach(x=>x.remove());d.querySelectorAll('input,select,textarea').forEach(x=>{const s=document.createElement('span');s.textContent=x.tagName==='SELECT'?(x.options[x.selectedIndex]||{}).text||'':x.value;x.replaceWith(s)});return d.innerHTML}
+function efSnapshot(){const keep={t:S.efTab,b:S.efBase};const out=[];try{S.efBase='aud';for(const t of ['sfin','eres','ecc','efe']){S.efTab=t;out.push(cleanHtml(vEF()))}}finally{S.efTab=keep.t;S.efBase=keep.b}return out.join('<hr>')}
+ACT.cliPublish=async()=>{if(!canW())return lockedToast();const o=cliOpc();const C=calc();const base=engPath()+'/cli/';const d=S.eng.datos||{};const P=S.eng.portal||{};
+ const rp=RUB.filter(r=>C.rub[r.k].accs.length||S.wp[r.k]).map(r=>wpProgress(r.k));const tot=rp.reduce((s,p)=>s+p.total,0),done=rp.reduce((s,p)=>s+p.done,0);
+ const docs={};const now=nowIso();
+ docs.info={nombre:d.nombre||'',rfc:d.rfc||'',ejercicio:d.ejercicio||'',firma:(S.settings&&S.settings.firma)||'',opc:o,avance:o.avance?(tot?done/tot:0):null,estado:S.eng.estado||'proceso',fechaInforme:d.fechaInforme||'',carpeta:P.carpeta||'',contacto:P.contacto||'',msg:P.msg||'',pubAt:now};
+ if(o.obs)S.obs.filter(x=>x.comunicar).forEach(x=>{docs['obs-'+x.id]={kind:'obs',ref:'OB-'+x.num,titulo:x.titulo||'',tipo:x.tipo||'',nivel:x.nivel||'',condicion:x.condicion||'',efecto:x.efecto||'',recomendacion:x.recomendacion||'',fund:x.fund||'',pubAt:now}});
+ if(o.adj)S.adj.filter(a=>a.estado==='propuesto'||!a.estado).forEach(a=>{docs['adj-'+a.id]={kind:'adj',ref:adjRef(a),desc:a.desc||'',fund:a.fund||'',lines:(a.lines||[]).map(l=>({c:l.c,n:C.accs[l.c]?C.accs[l.c].n:'',ca:+l.ca||0,ab:+l.ab||0})),pubAt:now}});
+ if(o.conf)docs.conf={kind:'html',titulo:'Confirmaciones de terceros',html:`<table><tr><th>Tipo</th><th>Tercero</th><th>Enviada</th><th>Recibida</th><th>Estado</th></tr>${S.conf.map(c=>`<tr><td>${esc(c.tipo||'')}</td><td>${esc(c.tercero||'')}</td><td>${fdate(c.enviada)}</td><td>${c.recibida?fdate(c.recibida):''}</td><td>${c.recibida?'Recibida':'Pendiente de respuesta del tercero'}</td></tr>`).join('')}</table>`,pubAt:now};
+ if(o.ef&&C.hasAct)docs.ef={kind:'html',titulo:'Estados financieros',html:efSnapshot(),pubAt:now};
+ if(o.carta)docs.carta={kind:'html',titulo:'Carta convenio',html:cartaDoc()+docFundHtml('carta'),pubAt:now};
+ if(o.inf){try{const r=docBuild('opinion');docs.inf={kind:'html',titulo:'Informe de los auditores independientes',html:r.html,pubAt:now}}catch(e){}}
+ try{const prev=Object.keys(S.cli||{});for(const id of prev){if(!docs[id]){const x=S.cli[id];if(x.kind==='obs'||x.kind==='adj'){if(x.resp||x.aprob)continue}await S.db.doc(base+id).delete()}}
+  for(const [id,x] of Object.entries(docs)){const old=(S.cli||{})[id];if(old&&(x.kind==='obs'||x.kind==='adj'))await S.db.doc(base+id).update({...x,...stamp()});else await S.db.doc(base+id).set({...x,...stamp()})}
+  engUpd({portal:{pubAt:now,pubBy:S.uid||''}});toast('Portal del cliente actualizado.')}catch(e){console.error(e);toast('No se pudo publicar en el portal.')}};
+function cliResp(){const C=S.cli||{};const ob=Object.entries(C).filter(([,x])=>x.kind==='obs');const aj=Object.entries(C).filter(([,x])=>x.kind==='adj');
+ return `<section class="panel"><h2>Respuestas a observaciones</h2>${ob.length?`<div class="tw"><table><thead><tr><th>Ref.</th><th>Observación</th><th>Respuesta del cliente</th><th>Fecha</th><th></th></tr></thead><tbody>${ob.map(([id,x])=>`<tr><td class="ref">${esc(x.ref)}</td><td>${esc(x.titulo)}</td><td>${x.resp?esc(x.resp):'<span class="muted">Sin respuesta</span>'}</td><td class="small">${x.respAt?esc(x.respBy||'')+' · '+fdt(x.respAt):''}</td><td>${x.resp?`<button class="btn sm" data-act="cliUseResp" data-id="${esc(id.slice(4))}" data-w>Usar como comentario de la administración</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No hay observaciones publicadas en el portal.</div>'}</section>
+ <section class="panel"><h2>Aprobación de ajustes propuestos</h2>${aj.length?`<div class="tw"><table><thead><tr><th>Ref.</th><th>Descripción</th><th>Decisión del cliente</th><th>Comentario</th><th></th></tr></thead><tbody>${aj.map(([id,x])=>`<tr><td class="ref">${esc(x.ref)}</td><td>${esc(x.desc)}</td><td>${x.aprob?`<span class="pill ${x.aprob==='Aceptado'?'ok':'bad'}">${esc(x.aprob)}</span>`:'<span class="muted">Pendiente</span>'}</td><td class="small">${esc(x.aprobComent||'')}</td><td>${x.aprob?`<button class="btn sm" data-act="cliUseAdj" data-id="${esc(id.slice(4))}" data-v="${x.aprob==='Aceptado'?'aceptado':'no_ajustado'}" data-w>Pasar a ${x.aprob==='Aceptado'?'«Aceptado»':'«No ajustado»'}</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No hay ajustes publicados para aprobación.</div>'}</section>`}
+ACT.cliUseResp=b=>{const o=S.obs.find(x=>x.id===b.dataset.id);const c=(S.cli||{})['obs-'+b.dataset.id];if(!o||!c)return;const x={...o};delete x.id;subSet('obs',o.id,{...x,respuesta:c.resp});toast('Comentario de la administración actualizado en '+('OB-'+o.num)+'.')};
+ACT.cliUseAdj=b=>{const a=S.adj.find(x=>x.id===b.dataset.id);if(!a)return;const x={...a};delete x.id;subSet('adj',a.id,{...x,estado:b.dataset.v});toast('Estado del ajuste actualizado.')};
+
 /* ---------- equipo, firmas, bloqueo, respaldo, arrastre y expediente permanente ---------- */
 const ROLES={aux:'Auxiliar',enc:'Encargado',ger:'Gerente',soc:'Socio',cal:'Revisor de control de calidad'};
 const SIGN_ROLES={prep:['aux','enc','ger','soc'],rev:['enc','ger','soc'],aut:['ger','soc']};
@@ -1096,7 +1354,7 @@ ACT.closeEng=()=>{if(closeBlockers().length||!['ger','soc'].includes(myRole()))r
 ACT.reopen=()=>{if(myRole()!=='soc')return;const m=modal('Reabrir expediente',`<label class="f">Motivo de la reapertura (queda registrado)<textarea id="ro-m"></textarea></label><div class="row"><button class="btn dng" id="ro-ok">Reabrir</button></div>`);
  m.querySelector('#ro-ok').onclick=async()=>{const mo=m.querySelector('#ro-m').value.trim();if(!mo){toast('Escribe el motivo.');return}try{await S.db.doc(engPath()).update({estado:'proceso',reap:{['r'+rid()]:{by:S.uid||'',at:nowIso(),motivo:mo}},...stamp()});m.remove();toast('Expediente reabierto.')}catch(e){toast('No se pudo reabrir el expediente.')}}};
 /* respaldo y restauración */
-const BK_COLS=['meta','tb','jr','wp','adj','obs','smp','conf','evd','imp','ci','hrs'];
+const BK_COLS=['meta','tb','jr','wp','adj','obs','smp','conf','evd','imp','ci','hrs','req'];
 ACT.backup=async()=>{if(!S.eid)return;toast('Preparando respaldo…',2000);try{const cols={};for(const c of BK_COLS){const s=await S.db.collection(engPath()+'/'+c).get();cols[c]=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]))}
  const d=S.eng.datos||{};const bk={formato:'expediente-auditoria',version:1,exportado:nowIso(),por:S.uid||'',id:S.eid,eng:S.eng,cols};
  await save(`Respaldo_${(d.nombre||'expediente').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w]+/g,'_').slice(0,30)}_${d.ejercicio||''}_${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(bk),'application/json')}catch(e){toast('No se pudo preparar el respaldo.')}};
@@ -1118,7 +1376,7 @@ ACT.rollEng=()=>{const e=S.eng,d=e.datos||{};const y=(+d.ejercicio||new Date().g
    const eng={datos:{...d,ejercicio:String(y),cierre:add1(d.cierre),fechaPre:add1(d.fechaPre),fechaInforme:''},equipo:e.equipo||{},mismaPersona:!!e.mismaPersona,rubExtra:e.rubExtra||[],neg:e.neg||{},risks:e.risks||{},perm:e.perm||{},budget:e.budget||{},tarifaProm:e.tarifaProm||null,carta:{dest:(e.carta||{}).dest||'',puesto:(e.carta||{}).puesto||'',hon:(e.carta||{}).hon||null,pago:(e.carta||{}).pago||''},prel:{partes:(e.prel||{}).partes||{}},estim:Object.fromEntries(live(e.estim).map(([eid,x])=>{const r=estRow(eid,x,calc());return [eid,{ord:x.ord||0,tipo:x.tipo||'',cuenta:x.cuenta||'',met:x.met||'',fuente:x.fuente||'',prevEst:r2(r.reg)}]})),eqr:{req:eqrReq()},
     mat:{metodo:mt.metodo||'escala',base:mt.base,pct:mt.pct,pmPct:mt.pmPct,amptPct:mt.amptPct,interp:!!mt.interp,sudAnt:r2(sud)},tc:{fuente:(e.tc||{}).fuente||'DOF'},estado:'proceso',prevId:S.eid,createdAt:nowIso(),createdBy:S.uid||'',...stamp()};
    Object.keys(eng.mat).forEach(k=>eng.mat[k]===undefined&&delete eng.mat[k]);
-   const cols={meta:{},tb:{},obs:{},ci:{}};Object.entries(S.ci||{}).forEach(([cid,d])=>{if(cid==='fraude'){cols.ci.fraude={fact:d.fact||{},riesgos:d.riesgos||{},ing:d.ing||{},prev:{reunion:d.reunion||{},concl:d.concl||''}};return}const ct={};live(d.ctrls).forEach(([k,x])=>{ct[k]={...x,dis:'',imp:'',efi:'np',prueba:null}});cols.ci[cid]={extra:d.extra||{},narr:d.narr||'',ctrls:ct,prevResp:d.resp||{},prevConcl:d.concl||null}});const mm=S.meta||{};cols.meta.map={map:mm.map||{},line:mm.line||{},nd:mm.nd||{},tag:mm.tag||{}};
+   const cols={meta:{},tb:{},obs:{},ci:{},req:{}};(S.req||[]).forEach((r,i)=>{cols.req['r'+rid()]={ord:i+1,desc:r.desc||'',area:r.area||'',fecha:'',estado:'pendiente',...stamp()}});Object.entries(S.ci||{}).forEach(([cid,d])=>{if(cid==='fraude'){cols.ci.fraude={fact:d.fact||{},riesgos:d.riesgos||{},ing:d.ing||{},prev:{reunion:d.reunion||{},concl:d.concl||''}};return}const ct={};live(d.ctrls).forEach(([k,x])=>{ct[k]={...x,dis:'',imp:'',efi:'np',prueba:null}});cols.ci[cid]={extra:d.extra||{},narr:d.narr||'',ctrls:ct,prevResp:d.resp||{},prevConcl:d.concl||null}});const mm=S.meta||{};cols.meta.map={map:mm.map||{},line:mm.line||{},nd:mm.nd||{},tag:mm.tag||{}};
    const rows=rowsOf(tbOf('act'));for(let i=0;i*1200<rows.length;i++)cols.tb['ant-'+i]={kind:'ant',idx:i,rows:rows.slice(i*1200,(i+1)*1200)};
    open.forEach((o,i)=>{cols.obs['o'+rid()]={...o,id:undefined,num:i+1,titulo:'Seguimiento: '+(o.titulo||''),condicion:`(Observación OB-${o.num} del ejercicio ${d.ejercicio||''}) `+(o.condicion||''),estado:'Abierta',respuesta:'',...stamp()}});
    Object.values(cols.obs).forEach(o=>delete o.id);
@@ -1457,7 +1715,7 @@ function vWP(){const C=calc();const rubs=RUB.filter(r=>C.rub[r.k].accs.length||S
  `<div class="chips">${rubs.map(r=>{const st=(S.wp[r.k]||{}).status;return `<button class="chip ${r.k===k?'on':''}" data-act="rub" data-k="${esc(r.k)}"><span class="dot ${st==='autorizado'||st==='revisado'?'ok':st==='preparado'?'navy':st==='proceso'?'warn':''}"></span>${esc(r.k)} · ${esc(r.n)}</button>`}).join('')}</div>
  <section class="panel"><header><div><h2><span class="ref" style="font-size:1rem">${esc(k)}</span> ${esc(R.n)}</h2><div class="small muted">RIM ${LVLN[rk.lvl]} · ${rk.sig||rk.fr?`alcance mínimo ${pc(rk.enf.alc)}, nivel de seguridad R = ${rk.enf.R}`:'enfoque analítico'} · alcance logrado ${pc(cv.pct)} (${money(cv.tested)} de ${money(cv.pop)})</div></div>
  <div class="row"><label class="f" style="flex-direction:row;align-items:center;gap:6px">Estado<select data-ch="wp" data-f="status" id="wp-status">${['pendiente','proceso'].concat(['preparado','revisado','autorizado'].includes(w.status)?[w.status]:[]).map(s=>`<option value="${s}" ${(w.status||'pendiente')===s?'selected':''}>${({pendiente:'Pendiente',proceso:'En proceso',preparado:'Elaborado',revisado:'Revisado',autorizado:'Autorizado'})[s]}</option>`).join('')}</select></label><button class="btn sm" data-act="hrsQuick" data-w>Registrar horas</button><button class="btn sm" data-act="xlsWp">Exportar cédula a Excel</button></div></header>
- <div class="tabs">${tabs.map(t=>`<button data-act="wpTab" data-t="${t[0]}" class="${S.wpTab===t[0]?'on':''}">${t[1]}${t[0]==='not'&&wpProgress(k).open?` <span class="pill warn">${wpProgress(k).open}</span>`:''}${t[0]==='esp'&&ne?` <span class="pill">${ne}</span>`:''}</button>`).join('')}</div>
+ ${rubNormPanel(k)}<div class="tabs">${tabs.map(t=>`<button data-act="wpTab" data-t="${t[0]}" class="${S.wpTab===t[0]?'on':''}">${t[1]}${t[0]==='not'&&wpProgress(k).open?` <span class="pill warn">${wpProgress(k).open}</span>`:''}${t[0]==='esp'&&ne?` <span class="pill">${ne}</span>`:''}</button>`).join('')}</div>
  ${({sum:wpSum,ana:wpAna,esp:wpEsp,pro:wpPro,evd:wpEvd,not:wpNot,con:wpCon})[S.wpTab](k,C,w)}</section>`}
 function wpSum(k,C,w){const R=C.rub[k];const s=RB[k].s;const p=showPre();
  const rows=R.accs.map((a,i)=>`<tr><td class="ref">${esc(k)}-${i+1}</td><td class="code">${esc(a.c)}</td><td><a href="#" data-act="goAcc" data-c="${esc(a.c)}">${esc(a.n)}</a></td>${sumCells(a,s)}<td>${mk('acc:'+a.c,w)}</td></tr>`).join('');
@@ -1511,8 +1769,8 @@ ACT.integDel=b=>wpUpd(S.rubro,{integ:{[S.acc]:{[b.dataset.id]:null}}});
 CH.integ=el=>wpUpd(S.rubro,{integ:{[S.acc]:{[el.dataset.id]:{[el.dataset.f]:val(el)}}}});
 function wpPro(k,C,w){const ps=live(w.procs&&Object.keys(w.procs).length?w.procs:wpDefault(k).procs).sort((a,b)=>(a[1].ord||0)-(b[1].ord||0));const rk=riskOf(k);const cv=coverage(k);
  return `<div class="note ${cv.pct<rk.enf.alc&&(rk.sig||rk.fr)?'warn':''}">Alcance requerido ${rk.sig||rk.fr?pc(rk.enf.alc):'analítico'} · alcance logrado ${pc(cv.pct)}. El alcance logrado suma movimientos probados y renglones de integración verificados contra el total de movimientos del rubro.</div>
- <div class="tw"><table><thead><tr><th>Aseveración</th><th>Tipo</th><th>Procedimiento</th><th>Hecho</th><th>Por</th><th>Ref.</th><th>Resultado</th></tr></thead><tbody>
- ${ps.map(([id,p])=>`<tr><td class="small">${esc(p.asev)}</td><td><span class="pill ${p.tipo==='X'?'sage':''}">${p.tipo==='X'?'Fiscal':'Financiero'}</span></td><td style="min-width:260px"><textarea data-ch="proc" data-id="${id}" data-f="txt" id="pr-${id}-t" style="min-height:48px">${esc(p.txt)}</textarea></td><td class="c"><input type="checkbox" data-ch="procDone" data-id="${id}" ${p.done?'checked':''} aria-label="Hecho"></td><td class="small">${p.done?uspan(p.by)+'<br>'+fdate(p.at):''}</td><td><input data-ch="proc" data-id="${id}" data-f="ref" value="${esc(p.ref||'')}" style="width:80px" id="pr-${id}-r"></td><td style="min-width:200px"><input data-ch="proc" data-id="${id}" data-f="res" value="${esc(p.res||'')}" id="pr-${id}-s" placeholder="Sin excepciones / ver AJ-…"></td></tr>`).join('')}</tbody></table></div>
+ <div class="tw"><table><thead><tr><th>Aseveración</th><th>Tipo</th><th>Procedimiento y fundamento</th><th>Hecho</th><th>Por</th><th>Ref.</th><th>Resultado</th></tr></thead><tbody>
+ ${ps.map(([id,p])=>`<tr><td class="small">${esc(p.asev)}</td><td><span class="pill ${p.tipo==='X'?'sage':''}">${p.tipo==='X'?'Fiscal':'Financiero'}</span></td><td style="min-width:260px"><textarea data-ch="proc" data-id="${id}" data-f="txt" id="pr-${id}-t" style="min-height:48px">${esc(p.txt)}</textarea><div class="fundl"><input data-ch="proc" data-id="${id}" data-f="fund" id="pr-${id}-fd" value="${esc(procFund(k,p))}" placeholder="Fundamento: NIA, NIF, ley y artículo" aria-label="Fundamento">${fundBtn(procFund(k,p))}</div></td><td class="c"><input type="checkbox" data-ch="procDone" data-id="${id}" ${p.done?'checked':''} aria-label="Hecho"></td><td class="small">${p.done?uspan(p.by)+'<br>'+fdate(p.at):''}</td><td><input data-ch="proc" data-id="${id}" data-f="ref" value="${esc(p.ref||'')}" style="width:80px" id="pr-${id}-r"></td><td style="min-width:200px"><input data-ch="proc" data-id="${id}" data-f="res" value="${esc(p.res||'')}" id="pr-${id}-s" placeholder="Sin excepciones / ver AJ-…"></td></tr>`).join('')}</tbody></table></div>
  <div class="row"><button class="btn sm" data-act="procAdd" data-t="F" data-w>Agregar procedimiento financiero</button><button class="btn sm" data-act="procAdd" data-t="X" data-w>Agregar procedimiento fiscal</button></div>`}
 CH.proc=el=>wpUpd(S.rubro,{procs:{[el.dataset.id]:{[el.dataset.f]:el.value}}});
 CH.procDone=el=>wpUpd(S.rubro,{procs:{[el.dataset.id]:{done:el.checked,by:el.checked?S.uid:'',at:el.checked?nowIso():''}},...((S.wp[S.rubro]||{}).status==='pendiente'||!S.wp[S.rubro]?{status:'proceso'}:{})});
@@ -1781,7 +2039,7 @@ function adjEditor(a){const C=calc();let lines=(a.lines||[]).map(l=>({...l}));
  const md=modal(a.id?`Editar ajuste ${adjRef(a)}`:'Nuevo asiento de ajuste',`<div class="form"><label class="f wide">Descripción<input id="aj-d" value="${esc(a.desc||'')}"></label>
  <label class="f">Tipo<select id="aj-t">${[['contable','Contable'],['reclasificacion','Reclasificación'],['fiscal','Fiscal (solo conciliación)']].map(o=>`<option value="${o[0]}" ${a.tipo===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></label>
  <label class="f">Estado<select id="aj-e">${[['propuesto','Propuesto'],['aceptado','Aceptado por el cliente'],['registrado','Registrado por el cliente en su balanza'],['no_ajustado','No ajustado']].map(o=>`<option value="${o[0]}" ${a.estado===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></label>
- <label class="f">Origen o referencia<input id="aj-o" value="${esc(a.origen||'')}" placeholder="B-2, prueba de corte, confirmación…"></label></div>${dlAcc(C)}
+ <label class="f">Origen o referencia<input id="aj-o" value="${esc(a.origen||'')}" placeholder="B-2, prueba de corte, confirmación…"></label><label class="f wide">Fundamento (NIF, NIA, ley y artículo)<input id="aj-fd" value="${esc(a.fund||'')}" placeholder="NIF C-9; LISR 28 fr. I…"></label></div>${dlAcc(C)}
  <div class="tw"><table><thead><tr><th>Cuenta</th><th>Nombre</th><th class="n">Cargo</th><th class="n">Abono</th><th></th></tr></thead><tbody id="aj-l"></tbody></table></div>
  <div class="row"><button class="btn sm" id="aj-add">Agregar línea</button><span id="aj-tot" class="small right"></span></div>
  <div class="row"><button class="btn pri" id="aj-ok">Guardar ajuste</button>${a.id?'<button class="btn dng" id="aj-del">Eliminar</button>':''}</div>`,true);
@@ -1791,22 +2049,23 @@ function adjEditor(a){const C=calc();let lines=(a.lines||[]).map(l=>({...l}));
  md.querySelector('#aj-l').addEventListener('click',e=>{const r=e.target.closest('[data-rm]');if(r){lines.splice(+r.dataset.rm,1);draw()}});
  md.querySelector('#aj-add').onclick=()=>{lines.push({c:'',ca:0,ab:0});draw()};
  md.querySelector('#aj-ok').onclick=()=>{const t=adjTotals({lines});if(!t.ok){toast('El asiento no cuadra: cargos y abonos deben ser iguales.');return}const bad=lines.filter(l=>!C.accs[l.c]);if(bad.length){toast('Hay cuentas que no existen en la balanza: '+bad.map(l=>l.c||'(vacía)').join(', '));return}
-  const tp=md.querySelector('#aj-t').value;const num=(a.num&&(a.tipo||'contable')===tp)?a.num:Math.max(0,...S.adj.filter(x=>(x.tipo||'contable')===tp&&x.id!==a.id).map(x=>x.num||0))+1;subSet('adj',a.id||'a'+rid(),{num,desc:md.querySelector('#aj-d').value,tipo:md.querySelector('#aj-t').value,estado:md.querySelector('#aj-e').value,origen:md.querySelector('#aj-o').value,lines:lines.filter(l=>l.ca||l.ab),createdBy:a.createdBy||S.uid});md.remove()};
+  const tp=md.querySelector('#aj-t').value;const num=(a.num&&(a.tipo||'contable')===tp)?a.num:Math.max(0,...S.adj.filter(x=>(x.tipo||'contable')===tp&&x.id!==a.id).map(x=>x.num||0))+1;subSet('adj',a.id||'a'+rid(),{num,desc:md.querySelector('#aj-d').value,tipo:md.querySelector('#aj-t').value,estado:md.querySelector('#aj-e').value,origen:md.querySelector('#aj-o').value,fund:md.querySelector('#aj-fd').value,lines:lines.filter(l=>l.ca||l.ab),createdBy:a.createdBy||S.uid});md.remove()};
  const d=md.querySelector('#aj-del');if(d)d.onclick=()=>{subDel('adj',a.id);md.remove()};draw()}
 
 /* ================= 8 · Observaciones ================= */
 function vObs(){return header('Cédula de observaciones','Hallazgos de control interno, contables, fiscales y de cumplimiento, con condición, criterio, causa, efecto y recomendación. Alimenta la carta de observaciones (NIA 265).')+
  `<div class="row"><button class="btn pri" data-act="obsEdit" data-w>Nueva observación</button></div>
- ${S.obs.length?`<div class="tw"><table><thead><tr><th>Ref.</th><th>Tipo</th><th>Rubro</th><th>Observación</th><th>Nivel</th><th>Comentario de la administración</th><th>Estado</th><th></th></tr></thead><tbody>${S.obs.map(o=>`<tr><td class="ref">OB-${o.num}</td><td class="small">${esc(o.tipo)}</td><td class="ref">${esc(o.rubro||'')}</td><td><b>${esc(o.titulo)}</b><div class="small muted">${esc((o.condicion||'').slice(0,180))}</div></td><td><span class="pill ${o.nivel==='Alto'?'bad':o.nivel==='Medio'?'warn':''}">${esc(o.nivel)}</span></td><td class="small">${esc(o.respuesta||'')}</td><td>${o.estado==='Atendida'?'<span class="pill ok">Atendida</span>':'<span class="pill">Abierta</span>'}</td><td><button class="btn sm" data-act="obsEdit" data-id="${o.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Sin observaciones registradas.</div>'}`}
+ ${S.obs.length?`<div class="tw"><table><thead><tr><th>Ref.</th><th>Tipo</th><th>Rubro</th><th>Observación</th><th>Nivel</th><th>Comentario de la administración</th><th>Estado</th><th></th></tr></thead><tbody>${S.obs.map(o=>`<tr><td class="ref">OB-${o.num}</td><td class="small">${esc(o.tipo)}</td><td class="ref">${esc(o.rubro||'')}</td><td><b>${esc(o.titulo)}</b><div class="small muted">${esc((o.condicion||'').slice(0,180))}</div></td><td><span class="pill ${o.nivel==='Alto'?'bad':o.nivel==='Medio'?'warn':''}">${esc(o.nivel)}</span></td><td class="small">${esc(o.respuesta||'')}${o.comunicar?`<div><span class="pill sage">En portal</span>${(S.cli['obs-'+o.id]||{}).resp&&!o.respuesta?' <span class="pill warn">El cliente respondió</span>':''}</div>`:''}</td><td>${o.estado==='Atendida'?'<span class="pill ok">Atendida</span>':'<span class="pill">Abierta</span>'}</td><td><button class="btn sm" data-act="obsEdit" data-id="${o.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Sin observaciones registradas.</div>'}`}
 ACT.obsEdit=b=>{const o=S.obs.find(x=>x.id===b.dataset.id)||{tipo:'Control interno',nivel:'Medio',estado:'Abierta',rubro:S.rubro};
  const md=modal(o.id?`Editar OB-${o.num}`:'Nueva observación',`<div class="form"><label class="f wide">Título<input id="ob-t" value="${esc(o.titulo||'')}"></label>
  <label class="f">Tipo<select id="ob-y">${['Control interno','Contable','Fiscal','Cumplimiento','Tecnologías de información'].map(x=>`<option ${o.tipo===x?'selected':''}>${x}</option>`).join('')}</select></label>
  <label class="f">Rubro<select id="ob-r"><option value="">General</option>${RUB.map(r=>`<option value="${r.k}" ${o.rubro===r.k?'selected':''}>${r.k} · ${esc(r.n)}</option>`).join('')}</select></label>
  <label class="f">Nivel<select id="ob-n">${['Alto','Medio','Bajo'].map(x=>`<option ${o.nivel===x?'selected':''}>${x}</option>`).join('')}</select></label>
  <label class="f">Estado<select id="ob-e">${['Abierta','Atendida'].map(x=>`<option ${o.estado===x?'selected':''}>${x}</option>`).join('')}</select></label>
- ${[['condicion','Condición (qué se encontró)'],['criterio','Criterio (norma, ley o política aplicable)'],['causa','Causa'],['efecto','Efecto o riesgo'],['recomendacion','Recomendación'],['respuesta','Comentario de la administración']].map(([f,l])=>`<label class="f wide">${l}<textarea id="ob-${f}">${esc(o[f]||'')}</textarea></label>`).join('')}</div>
- <div class="row"><button class="btn pri" id="ob-ok">Guardar</button>${o.id?'<button class="btn dng" id="ob-del">Eliminar</button>':''}</div>`,true);
- md.querySelector('#ob-ok').onclick=()=>{const g=i=>md.querySelector(i).value;const num=o.num||Math.max(0,...S.obs.map(x=>x.num||0))+1;subSet('obs',o.id||'o'+rid(),{num,titulo:g('#ob-t'),tipo:g('#ob-y'),rubro:g('#ob-r'),nivel:g('#ob-n'),estado:g('#ob-e'),...Object.fromEntries(['condicion','criterio','causa','efecto','recomendacion','respuesta'].map(f=>[f,g('#ob-'+f)]))});md.remove()};
+ ${[['condicion','Condición (qué se encontró)'],['criterio','Criterio (norma, ley o política aplicable)'],['fund','Fundamento legal (ley, artículo, fracción o regla)'],['causa','Causa'],['efecto','Efecto o riesgo'],['recomendacion','Recomendación'],['respuesta','Comentario de la administración']].map(([f,l])=>`<label class="f wide">${l}<textarea id="ob-${f}">${esc(o[f]||'')}</textarea></label>`).join('')}</div>
+ <label class="chk"><input type="checkbox" id="ob-com" ${o.comunicar?'checked':''}> Comunicar al cliente en su portal para que responda</label><div class="row"><button class="btn sm" type="button" id="ob-fd">Buscar fundamento en Fundamenta ↗</button></div><div class="row"><button class="btn pri" id="ob-ok">Guardar</button>${o.id?'<button class="btn dng" id="ob-del">Eliminar</button>':''}</div>`,true);
+ md.querySelector('#ob-ok').onclick=()=>{const g=i=>md.querySelector(i).value;const num=o.num||Math.max(0,...S.obs.map(x=>x.num||0))+1;subSet('obs',o.id||'o'+rid(),{num,titulo:g('#ob-t'),tipo:g('#ob-y'),rubro:g('#ob-r'),nivel:g('#ob-n'),estado:g('#ob-e'),comunicar:md.querySelector('#ob-com').checked,...Object.fromEntries(['condicion','criterio','fund','causa','efecto','recomendacion','respuesta'].map(f=>[f,g('#ob-'+f)]))});md.remove()};
+ md.querySelector('#ob-fd').onclick=()=>ACT.fdm({dataset:{q:md.querySelector('#ob-fund').value||md.querySelector('#ob-t').value}});
  const d=md.querySelector('#ob-del');if(d)d.onclick=()=>{subDel('obs',o.id);md.remove()}};
 
 /* ================= 9 · Fiscal ================= */
@@ -1886,17 +2145,18 @@ CH.cerrar=el=>engUpd({estado:el.checked?'cerrado':'proceso'});
 
 async function save(name,data,type){if(!S.dl){toast('Esta vista no permite descargas.');return}try{await S.dl.save({filename:name,data:new Blob([data],{type})});toast('Archivo listo: '+name)}catch(e){if(e&&e.code!=='declined'&&e.code!=='cancelled')toast('No se completó la descarga.')}}
 function wordDoc(title,body){return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#18233A}h1{font-family:Cambria,Georgia,serif;color:#1F3557;font-size:16pt}h2{font-family:Cambria,Georgia,serif;color:#1F3557;font-size:12.5pt;margin-top:16pt}table{border-collapse:collapse;width:100%}td,th{border:1px solid #9FB2A0;padding:4px 6px;font-size:9.5pt}th{background:#E3ECE1}.n{text-align:right}.firm{color:#7F9C7A;font-size:9pt;letter-spacing:1px;text-transform:uppercase}</style></head><body><div class="firm">${esc((S.settings&&S.settings.firma)||'Osiris Guadiana · Servicios Contables')}</div>${body}</body></html>`}
-ACT.doc=b=>{const d=S.eng.datos||{};const ck=S.eng.cierre||{};const C=calc();const M=mat();const ej=d.ejercicio||'';const fc=d.cierre?new Date(d.cierre+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}):'31 de diciembre de '+ej;const nm=esc(d.nombre||'');let html='',fn='';if(b.dataset.d==='carta'){save('Carta_convenio_'+ej+'.doc',wordDoc('Carta convenio',cartaDoc()),'application/msword');return}
- if(b.dataset.d==='opinion'){const op=ck.opinion||'limpia';const tit={limpia:'Opinión',salvedad:'Opinión con salvedades',adversa:'Opinión adversa',abstencion:'Abstención de opinión'}[op];
+function docBuild(kind){const d=S.eng.datos||{};const ck=S.eng.cierre||{};const C=calc();const M=mat();const ej=d.ejercicio||'';const fc=d.cierre?new Date(d.cierre+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}):'31 de diciembre de '+ej;const nm=esc(d.nombre||'');let html='',fn='';
+ if(kind==='opinion'){const op=ck.opinion||'limpia';const tit={limpia:'Opinión',salvedad:'Opinión con salvedades',adversa:'Opinión adversa',abstencion:'Abstención de opinión'}[op];
   const p1=op==='abstencion'?`Fuimos contratados para auditar los estados financieros de ${nm} (la Entidad), que comprenden el estado de situación financiera al ${fc}, el estado de resultado integral, el estado de cambios en el capital contable y el estado de flujos de efectivo correspondientes al ejercicio terminado en esa fecha, así como las notas explicativas. No expresamos una opinión sobre los estados financieros adjuntos. Debido a la importancia de lo descrito en la sección Fundamento de la abstención de opinión, no hemos podido obtener evidencia de auditoría que proporcione una base suficiente y adecuada para expresar una opinión.`
   :`Hemos auditado los estados financieros de ${nm} (la Entidad), que comprenden el estado de situación financiera al ${fc}, el estado de resultado integral, el estado de cambios en el capital contable y el estado de flujos de efectivo correspondientes al ejercicio terminado en esa fecha, así como las notas explicativas que incluyen un resumen de las políticas contables significativas. ${op==='adversa'?`En nuestra opinión, debido a la importancia de lo descrito en la sección Fundamento de la opinión adversa, los estados financieros adjuntos no presentan razonablemente la situación financiera de la Entidad al ${fc}, ni sus resultados y flujos de efectivo, de conformidad con las ${esc(d.marco||'NIF mexicanas')}.`:`En nuestra opinión, ${op==='salvedad'?'excepto por los efectos del asunto descrito en la sección Fundamento de la opinión con salvedades, ':''}los estados financieros adjuntos presentan razonablemente, en todos los aspectos materiales, la situación financiera de la Entidad al ${fc}, así como sus resultados y flujos de efectivo correspondientes al ejercicio terminado en esa fecha, de conformidad con las ${esc(d.marco||'Normas de Información Financiera mexicanas')}.`}`;
   html=`<h1>Informe de los auditores independientes</h1><p>A la Asamblea de Accionistas de ${nm}</p><h2>${tit}</h2><p>${p1}</p><h2>Fundamento de la ${tit.toLowerCase()}</h2>${op!=='limpia'?`<p>${esc(ck.fundamento||'[Describir el asunto que origina la modificación y cuantificar sus efectos.]')}</p>`:''}<p>Hemos llevado a cabo nuestra auditoría de conformidad con las Normas Internacionales de Auditoría (NIA). Nuestras responsabilidades se describen más adelante. Somos independientes de la Entidad de conformidad con el Código de Ética Profesional del Instituto Mexicano de Contadores Públicos y hemos cumplido las demás responsabilidades de ética de conformidad con dicho Código. ${op==='abstencion'?'':'Consideramos que la evidencia de auditoría obtenida proporciona una base suficiente y adecuada para nuestra opinión.'}</p>${ck.enfasis?`<h2>Párrafo de énfasis</h2><p>${esc(ck.enfasis)}</p>`:''}<h2>Responsabilidades de la administración y de los responsables del gobierno de la Entidad</h2><p>La administración es responsable de la preparación y presentación razonable de los estados financieros de conformidad con el marco de información aplicable y del control interno que considere necesario para permitir su preparación libre de incorrección material, debida a fraude o error. Al preparar los estados financieros, la administración es responsable de evaluar la capacidad de la Entidad para continuar como negocio en marcha. Los responsables del gobierno supervisan el proceso de información financiera.</p><h2>Responsabilidades del auditor</h2><p>Nuestros objetivos son obtener una seguridad razonable de que los estados financieros en su conjunto están libres de incorrección material, debida a fraude o error, y emitir un informe que contenga nuestra opinión. Seguridad razonable es un alto grado de seguridad, pero no garantiza que una auditoría realizada de conformidad con las NIA siempre detecte una incorrección material cuando existe. Como parte de la auditoría, aplicamos nuestro juicio profesional y mantenemos escepticismo profesional; identificamos y valoramos los riesgos de incorrección material, diseñamos y aplicamos procedimientos para responder a dichos riesgos, obtenemos conocimiento del control interno relevante, evaluamos las políticas contables y las estimaciones, concluimos sobre el uso de la base de negocio en marcha y evaluamos la presentación global de los estados financieros. Comunicamos a los responsables del gobierno el alcance y el momento de la auditoría y los hallazgos significativos, incluidas las deficiencias significativas del control interno identificadas.</p><p><br>${esc((S.settings&&S.settings.firma)||'Osiris Guadiana · Servicios Contables')}<br><br><br>${esc(d.socio||'C.P.C. [Nombre del socio]')}<br>Socio</p><p>${esc(ck.lugar||'[Ciudad], a [fecha]')}</p>`;fn='Opinion_'+ej+'.doc'}
- else if(b.dataset.d==='repr'){html=`<p>${esc(ck.lugar||'[Ciudad y fecha]')}</p><p>${esc((S.settings&&S.settings.firma)||'Osiris Guadiana · Servicios Contables')}<br>Presente</p><h1>Carta de representación</h1><p>Esta carta se proporciona en relación con su auditoría de los estados financieros de ${nm} al ${fc}, con el propósito de expresar una opinión sobre si presentan razonablemente, en todos los aspectos materiales, la situación financiera de la Entidad de conformidad con las ${esc(d.marco||'NIF mexicanas')}. Confirmamos, a nuestro leal saber y entender, lo siguiente:</p><ol><li>Hemos cumplido nuestra responsabilidad de preparar los estados financieros de conformidad con el marco de información aplicable.</li><li>Les hemos proporcionado acceso a toda la información relevante, a los registros contables, actas de asamblea y documentación soporte, y acceso sin restricción a las personas de la Entidad.</li><li>Todas las transacciones han sido registradas en los registros contables y se reflejan en los estados financieros.</li><li>Los supuestos significativos utilizados en las estimaciones contables son razonables.</li><li>Las relaciones y transacciones con partes relacionadas han sido reveladas y registradas adecuadamente.</li><li>Todos los hechos posteriores a la fecha de los estados financieros que requieren ajuste o revelación han sido ajustados o revelados.</li><li>Les hemos revelado los resultados de nuestra evaluación del riesgo de fraude y no tenemos conocimiento de fraude o indicios de fraude que afecten a la Entidad.</li><li>Les hemos revelado todos los litigios, reclamaciones y contingencias conocidos.</li><li>Hemos cumplido con las disposiciones fiscales aplicables y no existen contingencias fiscales distintas de las reveladas.</li><li>Los efectos de las incorrecciones no corregidas, resumidas en el anexo, son inmateriales, individualmente y en conjunto, para los estados financieros en su conjunto.</li></ol><h2>Anexo · Diferencias no corregidas</h2>${sudTable(C)}<p><br><br>______________________________<br>Director General</p><p><br>______________________________<br>Director de Finanzas</p>`;fn='Carta_representacion_'+ej+'.doc'}
- else if(b.dataset.d==='obs'){html=`<p>${esc(ck.lugar||'[Ciudad y fecha]')}</p><p>A la Administración y a los responsables del gobierno de ${nm}</p><h1>Carta de observaciones y recomendaciones</h1><p>Como parte de nuestra auditoría de los estados financieros al ${fc}, consideramos el control interno relevante para la preparación de los estados financieros con el fin de diseñar procedimientos de auditoría adecuados, y no con la finalidad de expresar una opinión sobre su eficacia. A continuación comunicamos las deficiencias y asuntos que identificamos, junto con nuestras recomendaciones.</p>${S.obs.length?S.obs.map(o=>`<h2>OB-${o.num}. ${esc(o.titulo)} <span style="font-size:9pt;color:#7F9C7A">(${esc(o.tipo)} · nivel ${esc(o.nivel)})</span></h2><p><b>Condición.</b> ${esc(o.condicion)}</p><p><b>Criterio.</b> ${esc(o.criterio)}</p><p><b>Causa.</b> ${esc(o.causa)}</p><p><b>Efecto.</b> ${esc(o.efecto)}</p><p><b>Recomendación.</b> ${esc(o.recomendacion)}</p><p><b>Comentario de la administración.</b> ${esc(o.respuesta||'Pendiente.')}</p>`).join(''):'<p>No se identificaron observaciones.</p>'}<p><br>Atentamente,<br>${esc(d.socio||'[Socio]')}</p>`;fn='Carta_observaciones_'+ej+'.doc'}
+ else if(kind==='repr'){html=`<p>${esc(ck.lugar||'[Ciudad y fecha]')}</p><p>${esc((S.settings&&S.settings.firma)||'Osiris Guadiana · Servicios Contables')}<br>Presente</p><h1>Carta de representación</h1><p>Esta carta se proporciona en relación con su auditoría de los estados financieros de ${nm} al ${fc}, con el propósito de expresar una opinión sobre si presentan razonablemente, en todos los aspectos materiales, la situación financiera de la Entidad de conformidad con las ${esc(d.marco||'NIF mexicanas')}. Confirmamos, a nuestro leal saber y entender, lo siguiente:</p><ol><li>Hemos cumplido nuestra responsabilidad de preparar los estados financieros de conformidad con el marco de información aplicable.</li><li>Les hemos proporcionado acceso a toda la información relevante, a los registros contables, actas de asamblea y documentación soporte, y acceso sin restricción a las personas de la Entidad.</li><li>Todas las transacciones han sido registradas en los registros contables y se reflejan en los estados financieros.</li><li>Los supuestos significativos utilizados en las estimaciones contables son razonables.</li><li>Las relaciones y transacciones con partes relacionadas han sido reveladas y registradas adecuadamente.</li><li>Todos los hechos posteriores a la fecha de los estados financieros que requieren ajuste o revelación han sido ajustados o revelados.</li><li>Les hemos revelado los resultados de nuestra evaluación del riesgo de fraude y no tenemos conocimiento de fraude o indicios de fraude que afecten a la Entidad.</li><li>Les hemos revelado todos los litigios, reclamaciones y contingencias conocidos.</li><li>Hemos cumplido con las disposiciones fiscales aplicables y no existen contingencias fiscales distintas de las reveladas.</li><li>Los efectos de las incorrecciones no corregidas, resumidas en el anexo, son inmateriales, individualmente y en conjunto, para los estados financieros en su conjunto.</li></ol><h2>Anexo · Diferencias no corregidas</h2>${sudTable(C)}<p><br><br>______________________________<br>Director General</p><p><br>______________________________<br>Director de Finanzas</p>`;fn='Carta_representacion_'+ej+'.doc'}
+ else if(kind==='obs'){html=`<p>${esc(ck.lugar||'[Ciudad y fecha]')}</p><p>A la Administración y a los responsables del gobierno de ${nm}</p><h1>Carta de observaciones y recomendaciones</h1><p>Como parte de nuestra auditoría de los estados financieros al ${fc}, consideramos el control interno relevante para la preparación de los estados financieros con el fin de diseñar procedimientos de auditoría adecuados, y no con la finalidad de expresar una opinión sobre su eficacia. A continuación comunicamos las deficiencias y asuntos que identificamos, junto con nuestras recomendaciones.</p>${S.obs.length?S.obs.map(o=>`<h2>OB-${o.num}. ${esc(o.titulo)} <span style="font-size:9pt;color:#7F9C7A">(${esc(o.tipo)} · nivel ${esc(o.nivel)})</span></h2><p><b>Condición.</b> ${esc(o.condicion)}</p><p><b>Criterio.</b> ${esc(o.criterio)}</p>${o.fund?`<p><b>Fundamento.</b> ${esc(o.fund)}</p>`:''}<p><b>Causa.</b> ${esc(o.causa)}</p><p><b>Efecto.</b> ${esc(o.efecto)}</p><p><b>Recomendación.</b> ${esc(o.recomendacion)}</p><p><b>Comentario de la administración.</b> ${esc(o.respuesta||'Pendiente.')}</p>`).join(''):'<p>No se identificaron observaciones.</p>'}<p><br>Atentamente,<br>${esc(d.socio||'[Socio]')}</p>`;fn='Carta_observaciones_'+ej+'.doc'}
  else {html=`<h1>Resumen de diferencias de auditoría</h1><p>${nm} · Ejercicio ${esc(ej)}</p><p>Materialidad global ${money(M.g)} · Materialidad de ejecución ${money(M.ej)} · AMPT ${money(M.am)}</p><h2>Ajustes propuestos y aceptados</h2>${adjTable(C,S.adj.filter(a=>a.estado!=='no_ajustado'))}<h2>Diferencias no ajustadas</h2>${sudTable(C)}`;fn='Resumen_diferencias_'+ej+'.doc'}
- save(fn,wordDoc(fn,html),'application/msword')};
+ html+=docFundHtml(kind==='opinion'||kind==='repr'||kind==='obs'?kind:'sud');return {html,fn}}
+ACT.doc=b=>{const ej=(S.eng.datos||{}).ejercicio||'';if(b.dataset.d==='carta'){save('Carta_convenio_'+ej+'.doc',wordDoc('Carta convenio',cartaDoc()+docFundHtml('carta')),'application/msword');return}const r=docBuild(b.dataset.d);save(r.fn,wordDoc(r.fn,r.html),'application/msword')};
 function sudTable(C){const un=S.adj.filter(a=>a.estado==='no_ajustado'&&a.tipo!=='fiscal');const t={act:0,pas:0,cap:0,res:0};return `<table><tr><th>Ref.</th><th>Descripción</th><th>Activo</th><th>Pasivo</th><th>Capital</th><th>Resultados</th></tr>${un.map(a=>{const e=adjEffect(a);Object.keys(t).forEach(k=>t[k]+=e[k]);return `<tr><td>${adjRef(a)}</td><td>${esc(a.desc)}</td><td class="n">${money(e.act)}</td><td class="n">${money(e.pas)}</td><td class="n">${money(e.cap)}</td><td class="n">${money(e.res)}</td></tr>`}).join('')||'<tr><td colspan="6">Sin diferencias no ajustadas.</td></tr>'}<tr><th></th><th>Total</th><th class="n">${money(t.act)}</th><th class="n">${money(t.pas)}</th><th class="n">${money(t.cap)}</th><th class="n">${money(t.res)}</th></tr></table>`}
-function adjTable(C,list){return `<table><tr><th>Ref.</th><th>Descripción</th><th>Cuenta</th><th>Nombre</th><th>Cargo</th><th>Abono</th></tr>${list.map(a=>(a.lines||[]).map((l,i)=>`<tr><td>${i?'':adjRef(a)}</td><td>${i?'':esc(a.desc)}</td><td>${esc(l.c)}</td><td>${esc(C.accs[l.c]?C.accs[l.c].n:'')}</td><td class="n">${money(l.ca)}</td><td class="n">${money(l.ab)}</td></tr>`).join('')).join('')||'<tr><td colspan="6">Sin ajustes.</td></tr>'}</table>`}
+function adjTable(C,list){return `<table><tr><th>Ref.</th><th>Descripción</th><th>Cuenta</th><th>Nombre</th><th>Cargo</th><th>Abono</th></tr>${list.map(a=>(a.lines||[]).map((l,i)=>`<tr><td>${i?'':adjRef(a)}</td><td>${i?'':esc(a.desc)+(a.fund?'<br><small>Fundamento: '+esc(a.fund)+'</small>':'')}</td><td>${esc(l.c)}</td><td>${esc(C.accs[l.c]?C.accs[l.c].n:'')}</td><td class="n">${money(l.ca)}</td><td class="n">${money(l.ab)}</td></tr>`).join('')).join('')||'<tr><td colspan="6">Sin ajustes.</td></tr>'}</table>`}
 function xlsx(sheets,name){if(!window.XLSX){toast('No se cargó el generador de Excel. Recarga la página.');return}const wb=XLSX.utils.book_new();sheets.forEach(([n,rows])=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=rows[0]?rows[0].map((_,i)=>({wch:i<2?14:i===2?42:16})):[];XLSX.utils.book_append_sheet(wb,ws,n.slice(0,31))});save(name,XLSX.write(wb,{type:'array',bookType:'xlsx'}),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
 function xlsHead(t){const d=S.eng.datos||{};const m=efMeta();return [[d.nombre||''],[`Auditoría al ${m.dm} de ${m.ej}`],[t],['(En pesos)'],[]]}
 function wpSheet(k,C){const R=C.rub[k];const s=RB[k].s;const w=S.wp[k]||{};const p=showPre();const d=S.eng.datos||{};
@@ -1932,7 +2192,7 @@ function vCfg(){const ms=marksCat();
  `<section class="panel"><h2>Despacho</h2><div class="form"><label class="f">Nombre que aparece en los documentos<input id="cf-firma" value="${esc((S.settings&&S.settings.firma)||'Osiris Guadiana · Servicios Contables')}" ${S.canEdit?'':'disabled'}></label></div></section>
  <section class="panel"><header><h2>Catálogo de marcas</h2>${S.canEdit?'':'<span class="pill">Solo editores pueden modificarlo</span>'}</header><div class="tw"><table><thead><tr><th>Marca</th><th>Significado</th><th></th></tr></thead><tbody id="mk-b">${ms.map((m,i)=>`<tr><td><input value="${esc(m[0])}" data-i="${i}" data-f="0" style="width:60px;color:var(--bad);font-weight:600" ${S.canEdit?'':'disabled'} aria-label="Símbolo"></td><td><input value="${esc(m[1])}" data-i="${i}" data-f="1" ${S.canEdit?'':'disabled'} aria-label="Significado"></td><td>${S.canEdit?`<button class="btn sm dng" data-act="mkDel" data-i="${i}" aria-label="Quitar marca">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>
  ${S.canEdit?'<div class="row"><button class="btn sm" data-act="mkAdd">Agregar marca</button></div>':''}</section>
- ${tarifPanel()}${ciCatPanel()}
+ ${temaPanel()}${fundRubPanel()}${tarifPanel()}${ciCatPanel()}
  <section class="panel"><header><h2>Leyenda de procedimientos</h2><span class="hint">Letras que se marcan en las pruebas de detalle y en las altas de activo fijo.</span></header><div class="tw"><table><thead><tr><th>Letra</th><th>Procedimiento</th></tr></thead><tbody id="pl-b">${procLeg().map((m,i)=>`<tr><td><input value="${esc(m[0])}" data-f="0" style="width:60px;font-weight:600" maxlength="2" ${S.canEdit?'':'disabled'} aria-label="Letra"></td><td><input value="${esc(m[1])}" data-f="1" ${S.canEdit?'':'disabled'} aria-label="Procedimiento"></td></tr>`).join('')}</tbody></table></div>
  ${S.canEdit?'<div class="row"><button class="btn sm" data-act="plAdd">Agregar procedimiento</button><button class="btn pri sm" data-act="cfgSave">Guardar configuración</button></div>':''}</section>`}
 const readPl=()=>[...document.querySelectorAll('#pl-b tr')].map(r=>[r.querySelector('[data-f="0"]').value.trim().toUpperCase(),r.querySelector('[data-f="1"]').value]).filter(x=>x[0]);
