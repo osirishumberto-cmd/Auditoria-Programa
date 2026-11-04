@@ -34,13 +34,14 @@ window.AUD_DOMINIO = 'cpcra.com.mx';
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-#gate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--navy,#1F3557);overflow:auto}
-#gate .gbox{background:var(--bg,#fff);color:var(--ink,#1a2433);border-radius:10px;max-width:560px;width:100%;padding:28px 26px;box-shadow:0 10px 40px rgba(0,0,0,.25);border-top:5px solid var(--sage,#7F9C7A)}
-#gate h1{font-family:"Source Serif 4",Georgia,serif;font-size:1.45rem;margin:0 0 8px;color:var(--navy,#1F3557)}
+#gate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;background:#1F3557;overflow:auto}
+#gate .gbox{background:#FFFFFF;color:#1A2433;border-radius:10px;max-width:560px;width:100%;padding:28px 26px;box-shadow:0 10px 40px rgba(0,0,0,.25);border-top:5px solid var(--sage,#7F9C7A)}
+#gate h1{font-family:"Source Serif 4",Georgia,serif;font-size:1.45rem;margin:0 0 8px;color:#1F3557}
 #gate h2{font-size:1rem;margin:18px 0 6px}
 #gate p{margin:6px 0 12px;line-height:1.45}
-#gate .gsm{font-size:.85rem;opacity:.8}
-#gate label{display:block;font-size:.85rem;margin:10px 0 0}
+#gate .gsm{font-size:.85rem;color:#4A5565}
+#gate b{color:#1A2433}
+#gate label{display:block;font-size:.85rem;margin:10px 0 0;color:#2B3645;font-weight:500}
 #gate input,#gate textarea,#gate select{width:100%;box-sizing:border-box;margin-top:4px;padding:9px 10px;border:1px solid #c9d1db;border-radius:6px;font:inherit;background:#fff;color:#1a2433}
 #gate textarea{font-family:"IBM Plex Mono",monospace;font-size:.8rem}
 #gate select{width:auto}
@@ -48,7 +49,7 @@ window.AUD_DOMINIO = 'cpcra.com.mx';
 #gate .grow{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .gb{padding:9px 14px;border-radius:6px;border:1px solid #c9d1db;background:#fff;color:#1F3557;font:inherit;font-weight:500;cursor:pointer}
 .gb.pri{background:#1F3557;color:#fff;border-color:#1F3557}
-#gate a{color:#4f6f4a}
+#gate a{color:#1F3557;font-weight:600}
 #g-bar{display:flex;flex-direction:column;gap:4px;margin-top:8px}
 .gl{all:unset;cursor:pointer;font-size:.8rem;font-weight:500;padding:6px 9px;border-radius:6px;color:var(--side-ink,#fff);border:1px solid color-mix(in srgb,var(--side-ink,#fff) 35%,transparent);display:flex;gap:6px;align-items:center}
 .gl:hover{background:color-mix(in srgb,var(--side-ink,#fff) 14%,transparent)}
@@ -234,7 +235,7 @@ const H=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 const gate=()=>document.getElementById('gate');
 const say=(html)=>{gate().style.display='flex';gate().querySelector('.gbox').innerHTML=html};
 const note=(m,bad)=>{const n=document.createElement('div');n.className='gtoast'+(bad?' bad':'');n.textContent=m;document.body.appendChild(n);setTimeout(()=>n.remove(),4200)};
-const ERR={'auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Correo o contraseña incorrectos.','auth/user-not-found':'No existe una cuenta con ese correo.','auth/email-already-in-use':'Ya existe una cuenta con ese correo; inicia sesión.','auth/weak-password':'La contraseña debe tener al menos 6 caracteres.','auth/invalid-email':'El correo no es válido.','auth/too-many-requests':'Demasiados intentos; espera unos minutos.','auth/popup-closed-by-user':'Se cerró la ventana de Google.','auth/network-request-failed':'Sin conexión a internet.','permission-denied':'No tienes permiso para esta acción.'};
+const ERR={'auth/account-exists-with-different-credential':'Ese correo ya tiene cuenta con contraseña: entra con correo y contraseña.','auth/popup-blocked':'El navegador bloqueó la ventana de Google; permite ventanas emergentes para este sitio.','auth/invalid-credential':'Correo o contraseña incorrectos. Si tu cuenta la creaste con Google, usa «Entrar con Google»; si olvidaste la contraseña, pulsa «Olvidé mi contraseña».','auth/wrong-password':'Correo o contraseña incorrectos.','auth/user-not-found':'No existe una cuenta con ese correo.','auth/email-already-in-use':'Ya existe una cuenta con ese correo; inicia sesión.','auth/weak-password':'La contraseña debe tener al menos 6 caracteres.','auth/invalid-email':'El correo no es válido.','auth/too-many-requests':'Demasiados intentos; espera unos minutos.','auth/popup-closed-by-user':'Se cerró la ventana de Google.','auth/network-request-failed':'Sin conexión a internet.','permission-denied':'No tienes permiso para esta acción.'};
 const msg=e=>ERR[e&&e.code]||((e&&e.message)||'Ocurrió un error.');
 
 /* ---------- configuración de Firebase ---------- */
@@ -357,13 +358,14 @@ async function loadDemo(){const el=document.getElementById('demo-seed');if(!el){
 function loginScreen(mode){const reg=mode==='reg';say(`<h1>${reg?'Crear cuenta':'Iniciar sesión'}</h1><p class="gsm">Expediente de Auditoría · base compartida del despacho.${reg?` Usa tu correo <b>@${H(DOMINIO)}</b> o el correo con el que te invitaron.`:''}</p>
  ${reg?'<label>Nombre completo<input id="g-n" autocomplete="name"></label>':''}
  <label>Correo<input id="g-e" type="email" autocomplete="email"></label><label>Contraseña<input id="g-p" type="password" autocomplete="${reg?'new-password':'current-password'}"></label>
- <div class="grow"><button class="gb pri" id="g-go">${reg?'Crear cuenta':'Entrar'}</button></div>
+ <div class="grow"><button class="gb pri" id="g-go">${reg?'Crear cuenta':'Entrar'}</button><button class="gb" id="g-goog">Entrar con Google</button></div><p class="gsm">Si creaste tu cuenta con «Entrar con Google», entra con ese botón: esa cuenta no tiene contraseña propia.</p>
  <p class="gsm" id="g-inst2" style="display:none"><a href="#" id="g-inst3">Instalar en el escritorio y menú Inicio</a></p><p class="gsm">${reg?'¿Ya tienes cuenta? <a href="#" id="g-sw">Inicia sesión</a>':'¿Primera vez? <a href="#" id="g-sw">Crea tu cuenta</a> · <a href="#" id="g-rst">Olvidé mi contraseña</a>'}</p>`);
  const A=firebase.auth();const v=id=>(document.getElementById(id)||{}).value||'';
  document.getElementById('g-inst3').onclick=e=>{e.preventDefault();doInstall()};instUI();document.getElementById('g-sw').onclick=e=>{e.preventDefault();loginScreen(reg?'in':'reg')};
  const r=document.getElementById('g-rst');if(r)r.onclick=async e=>{e.preventDefault();if(!v('g-e')){note('Escribe tu correo.',true);return}try{await A.sendPasswordResetEmail(v('g-e').trim());note('Te enviamos un correo para restablecer la contraseña. Revisa también el correo no deseado.')}catch(x){note(msg(x),true)}};
  document.getElementById('g-go').onclick=async()=>{try{if(reg){if(!v('g-n').trim()){note('Escribe tu nombre.',true);return}REGNAME=v('g-n').trim();NEWREG=true;const c=await A.createUserWithEmailAndPassword(v('g-e').trim(),v('g-p'));await c.user.updateProfile({displayName:REGNAME});try{await c.user.sendEmailVerification()}catch(e){}}else await A.signInWithEmailAndPassword(v('g-e').trim(),v('g-p'))}catch(x){note(msg(x),true)}};
- document.getElementById('g-p').onkeydown=e=>{if(e.key==='Enter')document.getElementById('g-go').click()}}
+ document.getElementById('g-p').onkeydown=e=>{if(e.key==='Enter')document.getElementById('g-go').click()};
+ document.getElementById('g-goog').onclick=async()=>{try{await A.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(x){note(x&&x.code==='auth/operation-not-allowed'?'El acceso con Google no está activado en Firebase (Authentication → Método de acceso → Google).':msg(x),true)}}}
 
 let started=false,REGNAME='',NEWREG=false;
 function start(){if(started){bar();return}started=true;gate().style.display='none';
