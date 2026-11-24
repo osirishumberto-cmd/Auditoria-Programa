@@ -711,7 +711,8 @@ function calc(){if(S.cache&&S.cache.ver===S.ver)return S.cache;
  if(prelim)rowsOf(tbOf('pre')).forEach(r=>{const a=get(String(r[0]),r[1]);if(!a.n)a.n=r[1];a.pre=+r[5]||0;a.hasPre=true});
  if(prelim)rowsOf(tbOf('apr')).forEach(r=>{const a=get(String(r[0]),r[1]);if(!a.n)a.n=r[1];a.antPre=+r[5]||0});
  const HY=Object.keys((S.eng&&S.eng.hist)||{}).sort((a,b)=>b-a).slice(0,3);HY.forEach((y,i)=>{const H=S.eng.hist[y]||{};Object.entries(H).forEach(([c,v])=>{const a=get(String(c),'');a['h'+(i+1)]=+v||0})});order.forEach(c=>{const a=accs[c];[1,2,3].forEach(i=>{if(a['h'+i]==null)a['h'+i]=0})});
- const sn=rowsOf(tbOf('sn')).map(r=>({c:String(r[0]),n:r[1]||'',si:+r[2]||0,ca:+r[3]||0,ab:+r[4]||0,sf:+r[5]||0}));
+const snK=Object.keys(tbOf('act')).length||!prelim?'sn':'snp';const snAnt={};rowsOf(tbOf('sna')).forEach(r=>{snAnt[String(r[0])]={n:r[1]||'',sf:+r[5]||0}});
+ const sn=rowsOf(tbOf(snK)).map(r=>({c:String(r[0]),n:r[1]||'',si:+r[2]||0,ca:+r[3]||0,ab:+r[4]||0,sf:+r[5]||0}));
  order.sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
  const m=S.meta||{};
  const mapped=mappedList();const antLoaded=Object.keys(tbOf('ant')).length>0;
@@ -734,7 +735,7 @@ function calc(){if(S.cache&&S.cache.ver===S.ver)return S.cache;
  // líneas de presentación (sin redondear)
  const L={};['ant','sf','aud','antSi','pre','preA','antPre'].forEach(f=>{const v={};LINES.forEach(l=>v[l.k]=0);const ff=f==='ant'?'antP':f;order.forEach(c=>{const a=accs[c];const l=LN[a.ln];if(!l||a.r==='XX')return;const sg=l.bal?(['ACT','ANC'].includes(l.g)?1:-1):(l.g==='ING'?-1:1);v[l.k]+=a[ff]*sg});L[f]=v});
  const unm=order.filter(c=>accs[c].hasAct&&(!accs[c].r||!RB[accs[c].r]&&accs[c].r!=='XX')).length;const npend=order.filter(c=>accs[c].hasAct&&accs[c].st==='pend').length,nher=order.filter(c=>accs[c].hasAct&&accs[c].st==='her').length;
- S.cache={ver:S.ver,histY:HY,accs,order,rub,T,L,jr,jAcc,mon,unm,npend,nher,sn,hasAct:Object.keys(tbOf('act')).length>0,hasAnt:Object.keys(tbOf('ant')).length>0,hasPre:prelim&&Object.keys(tbOf('pre')).length>0,hasApr:prelim&&Object.keys(tbOf('apr')).length>0,hasAntSi:order.some(c=>Math.abs(accs[c].antSi)>0.004||Math.abs(accs[c].antCa)>0.004)};return S.cache}
+ S.cache={ver:S.ver,histY:HY,accs,order,rub,T,L,jr,jAcc,mon,unm,npend,nher,sn,snK,snAnt,hasAct:Object.keys(tbOf('act')).length>0,hasAnt:Object.keys(tbOf('ant')).length>0,hasPre:prelim&&Object.keys(tbOf('pre')).length>0,hasApr:prelim&&Object.keys(tbOf('apr')).length>0,hasAntSi:order.some(c=>Math.abs(accs[c].antSi)>0.004||Math.abs(accs[c].antCa)>0.004)};return S.cache}
 function escFactor(usd,interp){if(usd<=ESCALA[0][0])return ESCALA[0][1];for(let i=1;i<ESCALA.length;i++){const [u,f]=ESCALA[i];if(usd<u){const [u0,f0]=ESCALA[i-1];return interp?f0+(f-f0)*(usd-u0)/(u-u0):f0}}return ESCALA[ESCALA.length-1][1]}
 function mat(per){const C=calc();const M=(S.eng&&S.eng.mat)||{};const tc=(S.eng&&S.eng.tc)||{};per=per||(C.hasAct||!C.hasPre?'sf':'pre');const T=C.T[per]||C.T.sf;
  const metodo=M.metodo||'escala';
@@ -1719,7 +1720,7 @@ CH.map=el=>metaUpd({map:{[el.dataset.c]:el.value},line:{[el.dataset.c]:''}});
 CH.line=el=>metaUpd({line:{[el.dataset.c]:el.value}});
 CH.nd=el=>metaUpd({nd:{[el.dataset.c]:el.checked}});
 CH.tag=el=>metaUpd({tag:{[el.dataset.c]:el.value}});
-ACT.impDel=b=>ask('Se quitará este insumo del expediente para todo el equipo.','Quitar',async()=>{await saveChunks(b.dataset.k,[]);if(b.dataset.k==='act')await saveChunks('sn',[]);engUpd({files:{[b.dataset.k]:null}})},true);
+ACT.impDel=b=>ask('Se quitará este insumo del expediente para todo el equipo.','Quitar',async()=>{await saveChunks(b.dataset.k,[]);if(b.dataset.k==='act')await saveChunks('sn',[]);if(b.dataset.k==='pre')await saveChunks('snp',[]);if(b.dataset.k==='ant')await saveChunks('sna',[]);engUpd({files:{[b.dataset.k]:null}})},true);
 ACT.rubAdd=()=>{const k=$('#nr-k').value.trim().toUpperCase(),n=$('#nr-n').value.trim(),g=$('#nr-g').value;if(!k||!n){toast('Escribe la referencia y el nombre de la sumaria.');return}if(!/^[A-Z0-9.]{1,6}$/.test(k)){toast('Usa solo letras, números o punto en la referencia.');return}if(RB[k]){toast('Ya existe una sumaria con la referencia '+k+'.');return}
  const [gg,sec]=g.split(':');const ex=((S.eng.rubExtra)||[]).slice();ex.push({k,n,g:gg,sec:sec||''});engUpd({rubExtra:ex});toast('Sumaria '+k+' agregada.')};
 ACT.rubDel=b=>{const ex=((S.eng.rubExtra)||[]).filter(r=>r.k!==b.dataset.k);engUpd({rubExtra:ex})};
@@ -1767,7 +1768,7 @@ function mapper(md,box,sheets,si,fk,kind,fname){const rows=sheets[si].rows;const
  box.querySelector('#mp-go').onclick=async()=>{const hh=Math.max(0,+box.querySelector('#mp-h').value-1);const mm={};F.forEach(f=>{const v=box.querySelector('#mp-'+f[0]).value;if(v!=='')mm[f[0]]=+v});
   const msg=box.querySelector('#mp-msg');const data=rows.slice(hh+1);
   try{if(fk==='tb'){const sep=box.querySelector('#mp-sn').checked;const out=buildTB(data,mm,box.querySelector('#mp-sg').value,box.querySelector('#mp-dd').value,box.querySelector('#mp-leaf').checked,box.querySelector('#mp-zero').checked,sep);if(!out.main.length)throw new Error('No se encontraron cuentas. Revisa la columna Cuenta y la fila de encabezados.');
-    msg.textContent='Guardando '+out.main.length+' cuentas…';const oldRows=rowsOf(tbOf(kind));await saveChunks(kind,out.main);const rp=(kind==='ant'||kind==='apr')?null:await importReport(kind,fname,oldRows,out.main);if(kind==='act')await saveChunks('sn',sep?out.sn:[]);
+    msg.textContent='Guardando '+out.main.length+' cuentas…';const oldRows=rowsOf(tbOf(kind));await saveChunks(kind,out.main);const rp=(kind==='ant'||kind==='apr')?null:await importReport(kind,fname,oldRows,out.main);if(kind==='act')await saveChunks('sn',sep?out.sn:[]);if(kind==='pre')await saveChunks('snp',sep?out.sn:[]);
     engUpd({files:{[kind]:{name:fname,at:nowIso(),by:S.uid||'',n:out.main.length}},impProf:{tb:{sheet:sheets.length>1?sheets[+((box.querySelector('#mp-sh')||{}).value||0)].name:'',h:hh,sig:impSig(rows[hh]),map:mm,sg:box.querySelector('#mp-sg').value,dd:box.querySelector('#mp-dd').value,leaf:box.querySelector('#mp-leaf').checked,zero:box.querySelector('#mp-zero').checked,sn:sep}}});md.remove();{const sm=out.main.reduce((t,r)=>t+(+r[5]||0),0);if(Math.abs(sm)>=1)setTimeout(()=>modal('La balanza importada no cuadra',`<div class="note bad">La suma de los saldos finales de «${esc(fname)}» es ${money(sm)}; en una balanza completa debe ser cero.</div><div class="hint">Causas comunes: el archivo trae todos los saldos en positivo y alguna cuenta complementaria (depreciación acumulada, estimaciones, pérdidas acumuladas) quedó con el signo equivocado; faltan cuentas; o se importaron cuentas de mayor junto con sus subcuentas. Reimporta con «Reemplazar» y revisa «Signo de los saldos», o corrige el signo de la cuenta en el archivo. Puedes seguir trabajando, pero los estados financieros no cuadrarán.</div>`),900)}toast(`Se importaron ${out.main.length} cuentas${out.sn.length&&kind==='act'?` y ${out.sn.length} subcuentas de terceros`:''}.`);if(rp)setTimeout(()=>showReport(rp),400)}
    else{const out=buildJR(data,mm);if(!out.length)throw new Error('No se encontraron movimientos. Revisa Fecha, Cuenta, Cargo y Abono.');msg.textContent='Guardando '+out.length+' movimientos…';const hadJr=Object.keys(S.jrDocs).length>0;const jrp=hadJr?jrReport(fname,out):null;await saveChunks('jr',out);if(jrp)setTimeout(()=>showReport(jrp),400);engUpd({files:{jr:{name:fname,at:nowIso(),by:S.uid||'',n:out.length}},impProf:{jr:{sheet:sheets.length>1?sheets[+((box.querySelector('#mp-sh')||{}).value||0)].name:'',h:hh,sig:impSig(rows[hh]),map:mm}}});md.remove();toast(`Se importaron ${out.length} movimientos.`)}}
   catch(err){msg.innerHTML=`<span class="neg">${esc(err.message||'No se pudo importar.')}</span>`}}}
@@ -1932,7 +1933,7 @@ function wpSum(k,C,w){const R=C.rub[k];const s=RB[k].s;const p=showPre();
  return `${ciBox(k)}<div class="tw"><table>${sumHead('<th>Ref.</th><th>Cuenta</th><th style="min-width:200px">Nombre</th>')}<th>Marcas</th></tr></thead><tbody>${rows}
  <tr class="tot"><td></td><td></td><td>Total ${esc(RB[k].n)}</td>${sumCells(R,s)}<td>${mk('tot',w)}</td></tr></tbody></table></div>
  <div class="hint">Saldo ajustado = saldo al cierre + ajustes (AJA) propuestos o aceptados. Saldo auditado = saldo ajustado + reclasificaciones (REC). Las diferencias no ajustadas se acumulan en el resumen de diferencias. Haz clic en la columna de marcas para asignarlas; en el nombre de la cuenta para abrir su analítica.</div>
- ${adjs.length?`<h3>Ajustes y reclasificaciones que afectan esta sumaria</h3><div class="tw"><table><tbody>${adjs.map(a=>`<tr><td class="ref">${adjRef(a)}</td><td>${esc(a.desc)}</td><td>${adjPill(a.estado)}</td><td class="n">${money(adjTotals(a).ca)}</td></tr>`).join('')}</tbody></table></div>`:''}`}
+ ${adjs.length?`<h3>Ajustes y reclasificaciones que afectan esta sumaria</h3><div class="tw"><table><tbody>${adjs.map(a=>`<tr><td class="ref">${adjRef(a)}</td><td>${esc(a.desc)}</td><td>${adjPill(a.estado)}</td><td class="n">${money(adjTotals(a).ca)}</td></tr>`).join('')}</tbody></table></div>`:''}${snSection(k,C,w)}`}
 function procLeg(){return (S.settings&&S.settings.procLeg)||PROC_LEG_DEF}
 ACT.test=b=>{const C=calc();const x=C.jr.find(j=>j.k===b.dataset.k);if(!x)return;const key='jr:'+x.k;const w=S.wp[S.rubro]||{};const t=(w.tests&&w.tests[key])||{};const imp=x.ca||x.ab;const pl=String(t.pl||'');
  const fi=(id,l,v,ty,ph)=>`<label class="f">${l}<input id="t-${id}" ${ty?`type="${ty}" step="0.01"`:''} value="${esc(v??'')}" ${ph?`placeholder="${ph}"`:''}></label>`;
@@ -3128,7 +3129,7 @@ async function deleteEng(id){toast('Eliminando expediente…');try{const base='e
  await S.db.doc(base).delete();if(S.eid===id)closeEng();toast('Expediente eliminado.')}catch(e){toast('No se pudo eliminar por completo. Vuelve a intentarlo.')}}
 
 /* versión visible y aviso de actualización */
-const APP_VER=17,APP_FECHA='24 de noviembre de 2026';
+const APP_VER=18,APP_FECHA='24 de noviembre de 2026';
 function verPaint(nv){const el=$('#appver');if(!el)return;el.classList.toggle('new',!!nv);el.dataset.nv=nv||'';el.innerHTML=nv?`Hay una versión nueva (${nv}). Tienes la ${APP_VER}. Presiona aquí para actualizar.`:`Versión ${APP_VER} · ${APP_FECHA}`;el.title=nv?'Recarga el programa con la versión más reciente':'Versión instalada del programa'}
 async function verCheck(){if(!/^https?:$/.test(location.protocol))return;try{const r=await fetch(location.pathname.replace(/[^/]*$/,'')+'index.html?v='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=t.match(/APP_VER=(\d+)/);if(m&&+m[1]>APP_VER)verPaint(+m[1])}catch(e){}}
 $('#appver').addEventListener('click',async()=>{if(!$('#appver').dataset.nv)return;try{if('caches' in window){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}if(navigator.serviceWorker){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update()))}}catch(e){}location.reload()});
@@ -3194,28 +3195,29 @@ function migCols(rows,hi){const cell=(r,i)=>String(((rows[r]||[])[i])??'');const
 function migBza(sheets){const bz=sheets.filter(s=>/^\s*BZA/i.test(s.name));if(!bz.length)return null;const sh=bz.find(s=>/dic|12/i.test(s.name))||bz[bz.length-1];
  const rows=sh.rows;const h=detectHeader(rows);const m=guessMap((rows[h]||[]).map(String),'tb');if(m.c==null)return {sheet:sh.name,err:'No se identificó la columna de cuenta.'};
  const data=rows.slice(h+1);let best=null;
- for(const [sg,leaf] of [['s',true],['s',false],['n',true],['n',false]]){const o=buildTB(data,m,sg,'1,5,6,7',leaf,true,true);const sum=o.main.reduce((t,r)=>t+(+r[5]||0),0);const x={sheet:sh.name,rows:o.main,sn:o.sn.length,sum};if(!best||Math.abs(sum)<Math.abs(best.sum)-0.5)best=x;if(Math.abs(sum)<1)break}
+ for(const [sg,leaf] of [['s',true],['s',false],['n',true],['n',false]]){const o=buildTB(data,m,sg,'1,5,6,7',leaf,true,true);const sum=o.main.reduce((t,r)=>t+(+r[5]||0),0);const x={sheet:sh.name,rows:o.main,sn:o.sn.length,snRows:o.sn,sum};if(!best||Math.abs(sum)<Math.abs(best.sum)-0.5)best=x;if(Math.abs(sum)<1)break}
  return best}
 function migParse(sheets){const P=mapParse(sheets);const B=migBza(sheets);const ref={},nm={};
  if(B&&B.rows)B.rows.forEach(r=>{ref[r[0]]=+r[5]||0;nm[r[0]]=r[1]});
  const C=calc();const CU=migCur();const sg={};if(!B||!B.rows)Object.values(CU.m).forEach(a=>{nm[a.c]=a.n;if(Math.abs(a.si)>=0.005)ref[a.c]=a.si;const z=Math.abs(a.sf)>=1?a.sf:a.ca-a.ab;if(Math.abs(z)>=1)sg[a.c]=Math.sign(z)});
- const acc={},adj=[],sheetsInfo=[];let nSn=0,difE=0;const omit=[];const sigs=new Set(B&&B.rows?B.rows.map(r=>String(r[0]).replace(/\d/g,'9')):Object.keys(CU.m).map(c=>String(c).replace(/\d/g,'9')));const pref=new Set();[...Object.keys(ref),...Object.keys(P.map)].forEach(c=>{const k=String(c).replace(/\D/g,'');for(let i=3;i<k.length;i++)pref.add(k.slice(0,i))});
+ const acc={},adj=[],sheetsInfo=[];const snA={};let nSn=0,difE=0;const omit=[];const sigs=new Set(B&&B.rows?B.rows.map(r=>String(r[0]).replace(/\d/g,'9')):Object.keys(CU.m).map(c=>String(c).replace(/\d/g,'9')));const pref=new Set();[...Object.keys(ref),...Object.keys(P.map)].forEach(c=>{const k=String(c).replace(/\D/g,'');for(let i=3;i<k.length;i++)pref.add(k.slice(0,i))});
  sheets.forEach(sh=>{const name=String(sh.name).trim();if(!/^[A-Z]{1,2}$|^\d{2}$/.test(name.toUpperCase()))return;const rk=P.sheets.find(s=>s.sheet===name);if(!rk||!rk.rub||rk.rub==='(lista)')return;
   const rows=sh.rows||[];const hi=rows.slice(0,15).findIndex(r=>/no\.?\s*de\s*cta|^cuenta/i.test(String((r||[])[0]??'').trim()));if(hi<0)return;const K=migCols(rows,hi);
-  const v=(r,i)=>typeof r[i]==='number'?r[i]:num(r[i]);const items=[];const nc=[];
+  const v=(r,i)=>typeof r[i]==='number'?r[i]:num(r[i]);const items=[];const nc=[];const snR=[];
   rows.slice(hi+1).forEach(r=>{if(!r)return;const c=migCode(r[0]);const E=v(r,K.E),I=v(r,K.I),J=v(r,K.J),dF=v(r,K.F),dH=v(r,K.H);const G=(r[K.G]===''||r[K.G]==null)?E+dF:v(r,K.G);const hasI=!(r[K.I]===''||r[K.I]==null);
-   if(c.startsWith('SN:')){nSn++;return}
+   if(c.startsWith('SN:')){nSn++;const G0=(r[K.G]===''||r[K.G]==null)?E+dF:v(r,K.G);snR.push([c.slice(3),String(r[1]??'').trim(),G0]);return}
    if(c){items.push({c,n:String(r[1]??'').trim(),E,G,rc:hasI?I-G:dH,J});return}
    const rf=String(r[K.Rf]??'').trim();if(/[A-Za-z]{2,}\s*-?\s*\d/.test(rf)&&!/total|suma/i.test(String(r[1]??''))){const nn=String(r[1]??'').trim()||'(sin nombre)';if(Math.abs(dF)>=0.01)nc.push({n:nn,ref:rf,d:dF,k:'aj'});if(Math.abs(dH)>=0.01)nc.push({n:nn,ref:rf,d:dH,k:'rc'})}});
   let vp=0,vn=0;items.forEach(it=>{if(Math.abs(it.E)<1)return;const b=ref[it.c];if(b!=null&&Math.abs(it.E-b)<1)vp++;else if(b!=null&&Math.abs(it.E+b)<1)vn++;else if(sg[it.c]){if(Math.sign(it.E)===sg[it.c])vp+=0.5;else vn+=0.5}});
   const sS=vp||vn?(vp>=vn?1:-1):((RB[rk.rub]||{}).s||1);const mixed=vp+vn>0&&Math.min(vp,vn)/(vp+vn)>=0.1;
   items.forEach(it=>{if(acc[it.c])return;if(ref[it.c]==null&&(pref.has(it.c.replace(/\D/g,''))||(sigs.size&&!sigs.has(it.c.replace(/\d/g,'9'))))){if(Math.abs(it.G)>=0.5)omit.push({c:it.c,n:it.n,rk:rk.rub,I:it.G});return}const b=ref[it.c];let s=sS;if(b!=null&&Math.abs(it.E)>=1){if(Math.abs(it.E-b)<1)s=1;else if(Math.abs(it.E+b)<1)s=-1;else if(Math.abs(b)>=1)difE++}else if(!B&&mixed&&sg[it.c]&&Math.abs(it.E)>=1&&(RB[rk.rub]||{}).g==='RES')s=Math.sign(it.E)===sg[it.c]?1:-1;
    acc[it.c]={c:it.c,n:it.n||nm[it.c]||'',rk:rk.rub,aud:r2(s*it.G),rc:r2(s*it.rc),prev:r2(s*it.J),src:'pap'}});
-  nc.forEach(x=>adj.push({sheet:name,rk:rk.rub,n:x.n,ref:x.ref,k:x.k,amt:r2(sS*x.d)}));
+  snR.forEach(([c,n,G0])=>{if(!snA[c])snA[c]=[c,n,0,0,0,r2(sS*G0)]});nc.forEach(x=>adj.push({sheet:name,rk:rk.rub,n:x.n,ref:x.ref,k:x.k,amt:r2(sS*x.d)}));
   sheetsInfo.push({sheet:name,rk:rk.rub,n:items.length,sS})});
  // cuentas con saldo en la balanza de cierre que no aparecen en ninguna sumaria
  const extra=[];Object.keys(ref).forEach(c=>{if(acc[c]||Math.abs(ref[c])<0.005)return;if((!B||!B.rows)&&/resultado del ejercicio|(utilidad|p[eé]rdida) del ejercicio|resultado del periodo/i.test(nm[c]||''))return;acc[c]={c,n:nm[c]||'',rk:'',aud:r2(ref[c]),rc:0,prev:0,src:'bza'};if(Math.abs(ref[c])>=0.5)extra.push(c)});
- return {P,B,acc,adj,extra,omit,sheetsInfo,nSn,difE,refFrom:B&&B.rows?'bza':(CU.k?'act':''),curK:CU.k}}
+ if(!Object.keys(snA).length&&B&&B.snRows)B.snRows.forEach(r=>{if(Math.abs(+r[5]||0)>=0.005)snA[r[0]]=[r[0],r[1],0,0,0,r2(+r[5]||0)]});
+ return {snA:Object.values(snA).filter(r=>Math.abs(r[5])>=0.005),P,B,acc,adj,extra,omit,sheetsInfo,nSn,difE,refFrom:B&&B.rows?'bza':(CU.k?'act':''),curK:CU.k}}
 function migSugAcc(x,acc){const W=s=>mapNorm(String(s||'').toLowerCase().replace(/\.\s*/g,'.').replace(/\b([a-z])\.(?=[a-z]\b)/g,'$1')).split(' ').filter(w=>w.length>2&&!['del','los','las','por','de','la'].includes(w));const t=W(x.n);if(!t.length)return '';
  const C=calc();const pool={};Object.values(acc).forEach(a=>pool[a.c]=[a.n,a.rk]);C.order.forEach(c=>{const a=C.accs[c];if(!pool[c])pool[c]=[a.n,a.r]});
  const gOf=rk=>((RB[rk]||{}).g==='RES')?'R':'B';let best='',bs=0;Object.entries(pool).forEach(([c,[n,rk]])=>{if(rk&&x.rk&&gOf(rk)!==gOf(x.rk))return;const w=W(n);let sc=t.filter(k=>w.some(z=>z.startsWith(k.slice(0,5))||k.startsWith(z.slice(0,5)))).length/t.length;if(rk===x.rk)sc+=0.35;if(sc>bs){bs=sc;best=c}});return bs>=0.6?best:''}
@@ -3241,7 +3243,7 @@ function migPreview(box){const {R,fname}=S.mig;const C=calc();const A=migRows();
  ${R.refFrom?'':'<div class="note warn">El papel no trae hoja de balanza de cierre (BZA) y todavía no hay balanza actual en el expediente: el signo de cada cuenta se infiere de la sumaria y puede fallar en sumarias mixtas (por ejemplo 50 o 60). Importa primero la balanza actual y vuelve a migrar.</div>'}
  <div class="tw"><table><tbody>
  <tr><td>Signo de cada cuenta tomado de</td><td>${R.refFrom==='bza'?'la balanza de cierre del papel ('+esc(R.B.sheet)+')':R.refFrom==='act'?'los saldos iniciales de la balanza '+(R.curK==='pre'?'al corte preliminar':'actual'):'la naturaleza de cada sumaria (no hay balanza de referencia)'}</td></tr>
- ${R.B&&R.B.sn?`<tr><td>Subcuentas de terceros (clientes y proveedores) separadas</td><td class="n">${NF0.format(R.B.sn+R.nSn)}</td></tr>`:R.nSn?`<tr><td>Subcuentas de terceros en las sumarias (no se suman; ya están en su cuenta de control)</td><td class="n">${NF0.format(R.nSn)}</td></tr>`:''}
+ ${R.snA.length?`<tr><td>Saldos por cliente y proveedor del año anterior (se guardan para la integración en B y BB; no se suman a la balanza)</td><td class="n">${NF0.format(R.snA.length)}</td></tr>`:''}
  <tr><td>Cuentas con saldo que no están en ninguna sumaria del papel</td><td class="n">${R.extra.length}</td></tr>
  <tr><td>Ajustes o reclasificaciones capturados sin número de cuenta</td><td class="n">${R.adj.length}</td></tr>
  <tr><td><b>Suma de saldos ajustados (saldo final ${esc((S.eng.datos||{}).ejercicio||'')})</b></td><td class="n"><b class="${Math.abs(sum)<1?'pos':'neg'}">${money(sum)}</b> ${Math.abs(sum)<1?'✓ cuadra':'debe ser cero'}</td></tr></tbody></table></div>
@@ -3270,7 +3272,7 @@ async function migApply(box){if(!canW())return lockedToast();const {R,fname}=S.m
    const xr={};R.extra.forEach(c=>{xr[c]=(S.mig.xr||{})[c]??migRubSug(c,R.acc,R.P)});
    const rkOf=c=>R.P.map[c]||xr[c]||A[c].rk||M[c]||'';
    const rows=Object.values(A).filter(a=>Math.abs(a.aud)>=0.005||Math.abs(a.prev)>=0.005).sort((a,b)=>a.c<b.c?-1:1).map(a=>{const g=(RB[rkOf(a.c)]||{}).g;const bal=g?g!=='RES':/^[123]/.test(a.c);const si=usePrev&&bal?a.prev:0;const d=r2(a.aud-si);return [a.c,a.n,si,d>0?d:0,d<0?-d:0,a.aud]});
-   await saveChunks('ant',rows);
+   await saveChunks('ant',rows);await saveChunks('sna',R.snA||[]);
    if(useMap){const mp={},ln={};const put=(c,r)=>{if(!r||(M[c]&&M[c]!==r&&!over)||M[c]===r)return;mp[c]=r;ln[c]=''};Object.entries(R.P.map).forEach(([c,r])=>put(c,r));Object.entries(xr).forEach(([c,r])=>put(c,r));
     Object.values(A).forEach(a=>{if(a.src==='aj'&&a.rk&&!R.P.map[a.c])put(a.c,a.rk)});if(Object.keys(mp).length)metaUpd({map:mp,line:ln})}
    const rcN={};Object.values(A).forEach(a=>{if(Math.abs(a.rc||0)>=0.005)rcN[a.c]=r2(a.rc)});const rcP={};Object.keys(S.eng.antRc||{}).forEach(c=>{if(!(c in rcN))rcP[c]=null});Object.assign(rcP,rcN);
@@ -3289,6 +3291,52 @@ CH.antRcOn=el=>engUpd({antRcOn:el.checked});
 
 function migCur(){const C=calc();const m={};if(C.hasAct){C.order.forEach(c=>{const a=C.accs[c];if(a.hasAct)m[c]={c,n:a.n,si:a.si,ca:a.ca,ab:a.ab,sf:a.sf}});return {k:'act',m}}
  const rows=rowsOf(tbOf('pre'));if(rows.length){rows.forEach(r=>{const c=String(r[0]);m[c]={c,n:r[1]||'',si:+r[2]||0,ca:+r[3]||0,ab:+r[4]||0,sf:+r[5]||0}});return {k:'pre',m}}return {k:'',m}}
+/* ---------- integración por cliente y proveedor (subcuentas de terceros) ---------- */
+const SN_DEF={C:'B',P:'BB'};
+function snPre(c){return (String(c).match(/^[A-Za-z]+/)||[''])[0].toUpperCase()}
+function snRubOf(c){const m=Object.assign({},SN_DEF,(S.eng&&S.eng.snRub)||{});return m[snPre(c)]||''}
+function snLbl(k){const ps=Object.entries(Object.assign({},SN_DEF,(S.eng&&S.eng.snRub)||{})).filter(([,r])=>r===k).map(([p])=>p);return ps.includes('C')?['cliente','Clientes']:ps.includes('P')?['proveedor','Proveedores']:['tercero','Terceros']}
+function snList(k,C){C=C||calc();const cur=C.sn.filter(x=>snRubOf(x.c)===k);const A=C.snAnt||{};const seen=new Set(cur.map(x=>x.c));
+ const L=cur.map(x=>({c:x.c,n:x.n,cur:x.sf,ant:(A[x.c]||{}).sf||0}));Object.entries(A).forEach(([c,v])=>{if(!seen.has(c)&&snRubOf(c)===k&&Math.abs(v.sf)>=0.005)L.push({c,n:v.n,cur:0,ant:v.sf})});return L}
+function snCtl(k,C,tot){const R=C.rub[k];const v=a=>C.hasAct?a.sf:(a.pre||0);const re=snLbl(k)[0]==='cliente'?/client/i:snLbl(k)[0]==='proveedor'?/proveed/i:null;
+ const out=accs=>({cur:accs.reduce((t,a)=>t+v(a),0),ant:accs.reduce((t,a)=>t+a.ant,0),n:accs.length});
+ let accs=re?R.accs.filter(a=>re.test(a.n)&&!/estimaci|anticipo/i.test(a.n)):[];if(accs.length&&(tot==null||Math.abs(out(accs).cur-tot)<1))return out(accs);
+ if(tot!=null){const G={};R.accs.forEach(a=>{const g=String(a.c).replace(/\D/g,'').slice(0,3);(G[g]=G[g]||[]).push(a)});const gs=Object.values(G).filter(g=>g.some(a=>Math.abs(v(a))>=0.005));
+  const tryS=list=>{const n=list.length;if(n>16)return null;for(let m=1;m<(1<<n);m++){let t=0;for(let i=0;i<n;i++)if(m&(1<<i))t+=list[i].t;if(Math.abs(t-tot)<1){const r=[];for(let i=0;i<n;i++)if(m&(1<<i))r.push(...list[i].a);return r}}return null};
+  let r=tryS(gs.map(g=>({a:g,t:g.reduce((x,a)=>x+v(a),0)})));if(!r){const al=R.accs.filter(a=>Math.abs(v(a))>=0.005);r=tryS(al.map(a=>({a:[a],t:v(a)})))}if(r)return out(r)}
+ return accs.length?out(accs):{cur:0,ant:0,n:0}}
+function snSection(k,C,w){const L=snList(k,C);if(!L.length)return '';const s=RB[k].s;const [one,many]=snLbl(k);const per=C.hasAct?'Saldo al cierre':(C.hasPre?'Corte preliminar':'Saldo actual');
+ const q=(S.snQ||'').toLowerCase();const sorted=L.slice().sort((a,b)=>Math.abs(b.cur)-Math.abs(a.cur));const tot=sorted.reduce((t,x)=>t+x.cur,0),totA=sorted.reduce((t,x)=>t+x.ant,0);
+ const conf={};S.conf.forEach(c=>{if(c.cod)conf[c.cod]=c});const ctl=snCtl(k,C,L.reduce((t,x)=>t+x.cur,0));let acum=0;
+ const rows=sorted.map(x=>{acum+=x.cur;return {...x,acum}}).filter(x=>!q||(x.c+' '+x.n).toLowerCase().includes(q));const lim=S.snAll?rows.length:Math.min(rows.length,150);
+ return `<h3 style="margin:16px 0 6px">Integración por ${one} (${NF0.format(L.length)})</h3>
+ <div class="row" style="flex-wrap:wrap;gap:6px"><input placeholder="Buscar ${one}…" value="${esc(S.snQ||'')}" data-ch="snQ" style="max-width:220px"><button class="btn sm pri" data-act="snConf" data-k="${esc(k)}" data-w>Generar confirmaciones</button><button class="btn sm" data-act="snAging" data-k="${esc(k)}" data-w>${one==='cliente'?'Cargar a antigüedad de saldos':one==='proveedor'?'Cargar a integración de proveedores':'Cargar a analítica'}</button><button class="btn sm" data-act="snXls" data-k="${esc(k)}">Exportar a Excel</button></div>
+ <div class="note ${Math.abs(tot-ctl.cur)>=1&&ctl.n?'warn':''}">Integración ${money(tot*s)} · cuentas de control en la sumaria${ctl.n?` (${ctl.n})`:''} ${money(ctl.cur*s)} · diferencia ${money((tot-ctl.cur)*s)}${Math.abs(tot-ctl.cur)>=1&&ctl.n?' · revisa que todas las subcuentas correspondan a las cuentas de control':''}.${totA||ctl.ant?` Año anterior: integración ${money(totA*s)} · cuentas ${money(ctl.ant*s)}.`:''}</div>
+ <div class="tw" style="max-height:520px"><table><thead><tr><th>Código</th><th style="min-width:220px">${esc(one[0].toUpperCase()+one.slice(1))}</th><th class="n">Ejercicio anterior</th><th class="n">${per}</th><th class="n">Variación</th><th class="n">% del total</th><th class="n">% acumulado</th><th>Confirmación</th></tr></thead><tbody>
+ ${rows.slice(0,lim).map(x=>{const cf=conf[x.c];return `<tr><td class="code">${esc(x.c)}</td><td>${esc(x.n)}</td><td class="n">${money(x.ant*s)}</td><td class="n"><b>${money(x.cur*s)}</b></td><td class="n">${money((x.cur-x.ant)*s)}</td><td class="n">${tot?pc(x.cur/tot):'—'}</td><td class="n">${tot?pc(x.acum/tot):'—'}</td><td>${cf?(cf.recibida?'<span class="pill ok">Recibida</span>':cf.enviada?'<span class="pill">Enviada</span>':'<span class="pill warn">Por enviar</span>'):''}</td></tr>`}).join('')}
+ ${rows.length>lim?`<tr><td colspan="8"><a href="#" data-act="snAll">Ver los ${NF0.format(rows.length)} renglones</a></td></tr>`:''}
+ <tr class="tot"><td></td><td>Total</td><td class="n">${money(totA*s)}</td><td class="n">${money(tot*s)}</td><td class="n">${money((tot-totA)*s)}</td><td></td><td></td><td></td></tr></tbody></table></div>`}
+CH.snQ=el=>{S.snQ=el.value;const p=el.selectionStart;render();const n=document.querySelector('[data-ch="snQ"]');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(e){}}};
+ACT.snAll=()=>{S.snAll=true;render()};
+ACT.snXls=b=>{const k=b.dataset.k;const C=calc();const s=RB[k].s;const L=snList(k,C).sort((a,b)=>Math.abs(b.cur)-Math.abs(a.cur));const [one]=snLbl(k);
+ xlsx([{name:'Integracion '+k,rows:[...xlsHead('Integración por '+one+' · sumaria '+k),['Código',one,'Ejercicio anterior',C.hasAct?'Saldo al cierre':'Corte preliminar','Variación'],...L.map(x=>[x.c,x.n,r2(x.ant*s),r2(x.cur*s),r2((x.cur-x.ant)*s)])]}],'Integracion_'+k)};
+ACT.snAging=b=>{const k=b.dataset.k;const [one]=snLbl(k);const t=one==='cliente'?'aging':one==='proveedor'?'provint':'';if(!t){toast('Usa la pestaña de analítica para estas subcuentas.');return}
+ S.rubro=k;const w=S.wp[k]||{};if(!(w.espOn||[]).includes(t))wpUpd(k,{espOn:[...new Set((w.espOn||[]).concat(t))]});setTimeout(()=>{ACT.espLoad({dataset:{t}});S.wpTab='esp';render()},150)};
+ACT.snConf=b=>{const k=b.dataset.k;const C=calc();const M=mat();const s=RB[k].s;const [one,many]=snLbl(k);const L=snList(k,C).filter(x=>Math.abs(x.cur)>=0.005).sort((a,b)=>Math.abs(b.cur)-Math.abs(a.cur));
+ const tot=L.reduce((t,x)=>t+Math.abs(x.cur),0);const have=new Set(S.conf.map(c=>c.cod).filter(Boolean));
+ const md=modal('Generar confirmaciones de '+many.toLowerCase(),`<div class="hint">Se registran en Confirmaciones de terceros con el saldo en libros de cada ${one}; después generas las cartas desde ahí. Las que ya existen no se duplican.</div>
+ <div class="form"><label class="f">Criterio<select id="sc-m"><option value="umb">Saldo igual o mayor a un importe</option><option value="cob">Los de mayor saldo hasta cubrir un porcentaje</option><option value="top">Los N de mayor saldo</option><option value="all">Todos los que tienen saldo</option></select></label>
+ <label class="f">Importe mínimo<input type="number" id="sc-u" value="${Math.round(M.ej||0)}"></label><label class="f">% de cobertura<input type="number" id="sc-c" value="80"></label><label class="f">N<input type="number" id="sc-n" value="20"></label>
+ <label class="chk wide"><input type="checkbox" id="sc-neg"> Incluir saldos contrarios a su naturaleza (anticipos), aunque no cumplan el criterio</label></div>
+ <div id="sc-p" class="note"></div><div class="row"><button class="btn pri" id="sc-ok">Registrar confirmaciones</button></div>`);
+ const pick=()=>{const m=md.querySelector('#sc-m').value,u=+md.querySelector('#sc-u').value||0,cp=(+md.querySelector('#sc-c').value||0)/100,n=+md.querySelector('#sc-n').value||0,neg=md.querySelector('#sc-neg').checked;let out=[];
+  if(m==='umb')out=L.filter(x=>Math.abs(x.cur)>=u);else if(m==='top')out=L.slice(0,n);else if(m==='all')out=L.slice();else{let a=0;for(const x of L){if(a>=cp*tot)break;out.push(x);a+=Math.abs(x.cur)}}
+  if(neg)L.forEach(x=>{if(x.cur*s<0&&!out.includes(x))out.push(x)});return out};
+ const upd=()=>{const P=pick();const cov=P.reduce((t,x)=>t+Math.abs(x.cur),0);const nw=P.filter(x=>!have.has(x.c)).length;md.querySelector('#sc-p').innerHTML=`${NF0.format(P.length)} ${many.toLowerCase()} · ${money(cov)} · cobertura ${tot?pc(cov/tot):'—'} del saldo · ${NF0.format(nw)} nuevas${P.length-nw?`, ${P.length-nw} ya registradas`:''}`};
+ md.querySelectorAll('input,select').forEach(e=>{e.oninput=upd;e.onchange=upd});upd();
+ md.querySelector('#sc-ok').onclick=()=>{if(!canW())return lockedToast();const P=pick().filter(x=>!have.has(x.c));if(!P.length){toast('No hay confirmaciones nuevas que registrar.');return}
+  P.forEach(x=>subSet('conf','c'+rid(),{tipo:one==='cliente'?'Clientes':one==='proveedor'?'Proveedores':'Otra',tercero:x.n,cod:x.c,cuenta:x.c,saldoLibros:r2(x.cur*s),atn:'',dom:'',enviada:'',recibida:'',saldoConf:0,ref:k,alterno:''}));
+  md.remove();toast(`Se registraron ${P.length} confirmaciones. Captura domicilio o correo y genera las cartas en Confirmaciones de terceros.`)}};
 
 ACT.satGo=()=>go('sat');
 document.addEventListener('click',e=>{const s=$('#side');if(s&&s.classList.contains('open')&&!e.target.closest('#side')&&!e.target.closest('[data-act="menu"]'))s.classList.remove('open')},true);
