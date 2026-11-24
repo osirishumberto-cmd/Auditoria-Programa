@@ -139,7 +139,7 @@ nav .ecard{background:color-mix(in srgb,var(--side-ink) 9%,transparent);border-r
 nav .ecard b{font-size:.88rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}nav .ecard span{font-size:.72rem;opacity:.8}
 nav .nsearch{border:1px solid color-mix(in srgb,var(--side-ink) 22%,transparent);margin-bottom:4px;font-size:.82rem}nav .nsearch kbd{white-space:nowrap;margin-left:auto;font-size:.66rem;opacity:.7;font-family:var(--mono);border:1px solid color-mix(in srgb,var(--side-ink) 30%,transparent);border-radius:4px;padding:0 4px}
 nav .nrail{opacity:.75;font-size:.82rem}.rkl{display:flex;flex-direction:column;gap:10px}.rkc{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}.rkc.bad{border-left:4px solid var(--bad)}.rkh{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.rkh .right{flex:1}.rkf{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}.rkg{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}.rkg small{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.rkd{border-top:1px dashed var(--line);padding-top:8px}
-@media (min-width:901px){
+@media (min-width:861px){
 body.navrail .app{grid-template-columns:66px minmax(0,1fr)}
 body.navrail aside{padding-inline:9px}
 body.navrail .brand small,body.navrail .brand b,body.navrail .who{display:none}
@@ -152,7 +152,7 @@ table.libre td{font-size:.78rem;white-space:nowrap}
 .nota.off{opacity:.55}.nota textarea{width:100%}.tw.nt table{max-width:760px}.tw.nt table+table{margin-top:10px}
 nav button:focus-visible{outline:2px solid var(--sage)}
 nav .sep{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.6;padding:10px 9px 2px}
-.who{margin-top:auto;font-size:.8rem}
+.who{margin-top:auto;font-size:.8rem}.appver{display:block;width:100%;text-align:left;margin-top:8px;font:inherit;font-size:.7rem;line-height:1.35;color:inherit;opacity:.7;background:none;border:0;padding:0;cursor:default}.appver.new{opacity:1;background:var(--side-on);color:var(--side-on-ink);border-radius:6px;padding:6px 8px;cursor:pointer;font-weight:600}body.navrail .appver{display:none}
 main{min-width:0;padding-block:20px 60px;padding-left:max(16px,2vw);padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
 .topbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;justify-content:space-between}
 .topbar .meta{color:var(--muted);font-size:.85rem}
@@ -269,8 +269,9 @@ td input,td select{padding:3px 5px;font-size:.8rem}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
   aside{position:fixed;inset:0 auto 0 0;width:250px;z-index:40;transform:translateX(-105%);transition:transform .2s;height:100%;padding-top:max(18px,env(safe-area-inset-top,0px))}
-  aside.open{transform:none}
+  aside.open{transform:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
   .menu-btn{display:inline-flex}
+  nav .nrail{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -281,6 +282,7 @@ td input,td select{padding:3px 5px;font-size:.8rem}
     <div class="brand"><small>Osiris Guadiana · Servicios Contables</small><b>Expediente de Auditoría</b></div>
     <nav id="nav"></nav>
     <div class="who" id="who">Conectando…</div>
+    <button type="button" class="appver" id="appver"></button>
   </aside>
   <main id="main">
     <div class="empty">Cargando el aplicativo. Si tarda, revisa tu conexión: los expedientes se guardan en la base compartida del despacho.</div>
@@ -1252,7 +1254,7 @@ function navPush(prev){if(NAVBUSY||!prev)return;const cur=navSnap();if(navSame(p
 function navBack(){const p=NAVH.pop();if(!p)return;NAVBUSY=true;try{Object.keys(p.t).forEach(k=>S[k]=p.t[k]);S.rubro=p.rubro;S.acc=p.acc;
  if(p.eid&&p.eid!==S.eid){openEng(p.eid,p.view)}else if(!p.eid&&S.eid&&p.view==='home'){closeEng()}else{S.view=p.view;ls('aud.view',p.view);renderNav();render()}
  setTimeout(()=>window.scrollTo(0,p.y||0),40)}finally{NAVBUSY=false}}
-ACT.back=()=>{if(NAVHIST&&history.state&&history.state.aud)history.back();else navBack()};
+ACT.back=()=>{if(!NAVH.length){const b=$('#nav-back');if(b)b.disabled=true;return}if(NAVHIST&&history.state&&history.state.aud)history.back();else navBack()};
 addEventListener('popstate',()=>{if(NAVH.length)navBack()});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act],[data-nav],[data-rubnav],[data-nav2]');if(!b||b.dataset.act==='back')return;const prev=navSnap();setTimeout(()=>navPush(prev),0)},true);
 document.addEventListener('change',e=>{if(!e.target.closest('[data-ch]'))return;const prev=navSnap();setTimeout(()=>navPush(prev),0)},true);
@@ -1676,6 +1678,7 @@ function vIns(){const C=calc();const tb=k=>Object.values(S.tbDocs).filter(d=>d.k
  const card=(k,t,desc)=>{const i=info[k];const n=k==='jr'?C.jr.length:rowsOf(Object.fromEntries(tb(k).map((d,x)=>[x,d]))).length;return `<div class="tile" style="gap:8px"><small>${t}</small><b>${n?NF0.format(n)+(k==='jr'?' movimientos':' cuentas'):'Sin cargar'}</b><span>${i?`${esc(i.name)} · ${fdt(i.at)} · ${uspan(i.by)}`:esc(desc)}</span><div class="row"><button class="btn pri sm" data-act="imp" data-k="${k}" data-w>${n?'Reemplazar':'Importar'}</button>${n?`<button class="btn dng sm" data-act="impDel" data-k="${k}" data-w>Quitar</button>`:''}</div></div>`};
  let sSf=0,sCa=0,sAb=0,bad=0;C.order.forEach(c=>{const a=C.accs[c];if(!a.hasAct)return;sSf+=a.sf;sCa+=a.ca;sAb+=a.ab;if(Math.abs(a.si+a.ca-a.ab-a.sf)>0.5)bad++});
  const jd=[];if(C.jr.length)C.order.forEach(c=>{const a=C.accs[c];if(!a.hasAct)return;const j=C.jAcc[c]||{ca:0,ab:0};if(Math.abs(j.ca-a.ca)>0.5||Math.abs(j.ab-a.ab)>0.5)jd.push({a,j})});
+ const sumK=k=>rowsOf(tbOf(k)).reduce((t,r)=>t+(+r[5]||0),0);const sAnt=C.hasAnt?sumK('ant'):0,sPre=C.hasPre?sumK('pre'):0;const orph=C.hasAnt&&C.hasAct?C.order.filter(c=>{const a=C.accs[c];return a.hasAnt&&!a.hasAct&&Math.abs(a.ant)>0.5}).length:0;
  const ad=[];if(C.hasAnt)C.order.forEach(c=>{const a=C.accs[c];if(a.hasAct&&a.hasAnt&&RB[a.r]&&RB[a.r].g!=='RES'&&!/resultado|utilidad|p.rdida/i.test(a.n)&&Math.abs(a.ant-a.si)>0.5)ad.push(a)});
  let jCa=0,jAb=0;C.jr.forEach(j=>{jCa+=j.ca;jAb+=j.ab});
  const ok=(b,t)=>`<div class="note ${b?'':'bad'}">${b?'✓':'✗'} ${t}</div>`;
@@ -1695,7 +1698,7 @@ function vIns(){const C=calc();const tb=k=>Object.values(S.tbDocs).filter(d=>d.k
  ${ok(bad===0,`${bad} cuentas donde saldo inicial + cargos − abonos no da el saldo final`)}
  ${ok(Math.abs(C.T.sf.cuadre)<1,`Ecuación contable: activo − pasivo − capital (con resultado del ejercicio) = ${money(C.T.sf.cuadre)}`)}</div><div style="display:flex;flex-direction:column;gap:6px">
  ${C.jr.length?ok(Math.abs(jCa-jAb)<1,`Diario: cargos ${money(jCa)} contra abonos ${money(jAb)}`)+ok(!jd.length,`${jd.length} cuentas con movimientos del diario distintos a la balanza`):'<div class="note warn">Sin diario: no podrás muestrear movimientos ni probar asientos manuales.</div>'}
- ${C.hasAnt?ok(!ad.length,`${ad.length} cuentas de balance donde el saldo final anterior no coincide con el inicial actual`):'<div class="note warn">Sin balanza anterior: los comparativos mostrarán cero.</div>'}
+ ${C.hasAnt?ok(Math.abs(sAnt)<1,`Balanza del ejercicio anterior: suma de saldos finales ${money(sAnt)} ${Math.abs(sAnt)<1?'(cuadra)':'(debe ser cero: revisa signos o reimporta)'}`)+ok(!ad.length,`${ad.length} cuentas de balance donde el saldo final anterior no coincide con el inicial actual`)+(orph?`<div class="note warn">✗ ${orph} cuentas con saldo en la balanza anterior que no existen en la actual. ¿Cambió la codificación del catálogo? Sus saldos aparecerán en renglones separados en las sumarias y comparativos.</div>`:''):'<div class="note warn">Sin balanza anterior: los comparativos mostrarán cero.</div>'}${C.hasPre?ok(Math.abs(sPre)<1,`Balanza al corte preliminar: suma de saldos ${money(sPre)} ${Math.abs(sPre)<1?'(cuadra)':'(debe ser cero)'}`):''}
  ${ok(!C.unm,`${C.unm} cuentas sin sumaria asignada`)}</div></div>
  ${jd.length?`<details><summary class="small">Ver diferencias diario contra balanza</summary><div class="tw"><table><thead><tr><th>Cuenta</th><th>Nombre</th><th class="n">Cargos balanza</th><th class="n">Cargos diario</th><th class="n">Abonos balanza</th><th class="n">Abonos diario</th></tr></thead><tbody>${jd.slice(0,100).map(x=>`<tr><td class="code">${esc(x.a.c)}</td><td>${esc(x.a.n)}</td><td class="n">${money(x.a.ca)}</td><td class="n">${money(x.j.ca)}</td><td class="n">${money(x.a.ab)}</td><td class="n">${money(x.j.ab)}</td></tr>`).join('')}</tbody></table></div></details>`:''}
  ${ad.length?`<details><summary class="small">Ver diferencias de saldos iniciales</summary><div class="tw"><table><thead><tr><th>Cuenta</th><th>Nombre</th><th class="n">Final anterior</th><th class="n">Inicial actual</th></tr></thead><tbody>${ad.slice(0,100).map(a=>`<tr><td class="code">${esc(a.c)}</td><td>${esc(a.n)}</td><td class="n">${money(a.ant)}</td><td class="n">${money(a.si)}</td></tr>`).join('')}</tbody></table></div></details>`:''}`:'<div class="empty">Importa la balanza al cierre para ver los cuadres.</div>'}</section>`:tab==='sat'?satMapTab(C):tab==='bal'?insBal(C):tab==='pvf'?insPvf(C,mat()):tab==='imp'?insImp():tab==='sum'?`<section class="panel"><header><h2>Sumarias del expediente</h2><span class="hint">El índice del despacho viene predefinido. Agrega las sumarias adicionales que requiera este cliente; después asígnales cuentas en el mapeo.</span></header>
@@ -1763,7 +1766,7 @@ function mapper(md,box,sheets,si,fk,kind,fname){const rows=sheets[si].rows;const
   const msg=box.querySelector('#mp-msg');const data=rows.slice(hh+1);
   try{if(fk==='tb'){const sep=box.querySelector('#mp-sn').checked;const out=buildTB(data,mm,box.querySelector('#mp-sg').value,box.querySelector('#mp-dd').value,box.querySelector('#mp-leaf').checked,box.querySelector('#mp-zero').checked,sep);if(!out.main.length)throw new Error('No se encontraron cuentas. Revisa la columna Cuenta y la fila de encabezados.');
     msg.textContent='Guardando '+out.main.length+' cuentas…';const oldRows=rowsOf(tbOf(kind));await saveChunks(kind,out.main);const rp=(kind==='ant'||kind==='apr')?null:await importReport(kind,fname,oldRows,out.main);if(kind==='act')await saveChunks('sn',sep?out.sn:[]);
-    engUpd({files:{[kind]:{name:fname,at:nowIso(),by:S.uid||'',n:out.main.length}}});md.remove();toast(`Se importaron ${out.main.length} cuentas${out.sn.length&&kind==='act'?` y ${out.sn.length} subcuentas de terceros`:''}.`);if(rp)setTimeout(()=>showReport(rp),400)}
+    engUpd({files:{[kind]:{name:fname,at:nowIso(),by:S.uid||'',n:out.main.length}}});md.remove();{const sm=out.main.reduce((t,r)=>t+(+r[5]||0),0);if(Math.abs(sm)>=1)setTimeout(()=>modal('La balanza importada no cuadra',`<div class="note bad">La suma de los saldos finales de «${esc(fname)}» es ${money(sm)}; en una balanza completa debe ser cero.</div><div class="hint">Causas comunes: el archivo trae todos los saldos en positivo y alguna cuenta complementaria (depreciación acumulada, estimaciones, pérdidas acumuladas) quedó con el signo equivocado; faltan cuentas; o se importaron cuentas de mayor junto con sus subcuentas. Reimporta con «Reemplazar» y revisa «Signo de los saldos», o corrige el signo de la cuenta en el archivo. Puedes seguir trabajando, pero los estados financieros no cuadrarán.</div>`),900)}toast(`Se importaron ${out.main.length} cuentas${out.sn.length&&kind==='act'?` y ${out.sn.length} subcuentas de terceros`:''}.`);if(rp)setTimeout(()=>showReport(rp),400)}
    else{const out=buildJR(data,mm);if(!out.length)throw new Error('No se encontraron movimientos. Revisa Fecha, Cuenta, Cargo y Abono.');msg.textContent='Guardando '+out.length+' movimientos…';const hadJr=Object.keys(S.jrDocs).length>0;const jrp=hadJr?jrReport(fname,out):null;await saveChunks('jr',out);if(jrp)setTimeout(()=>showReport(jrp),400);engUpd({files:{jr:{name:fname,at:nowIso(),by:S.uid||'',n:out.length}}});md.remove();toast(`Se importaron ${out.length} movimientos.`)}}
   catch(err){msg.innerHTML=`<span class="neg">${esc(err.message||'No se pudo importar.')}</span>`}}}
 function buildTB(data,m,sg,dd,leaf,skipZero,sepSN){const deud=new Set(dd.split(',').map(s=>s.trim()));const out=[],sn=[];
@@ -1771,7 +1774,7 @@ function buildTB(data,m,sg,dd,leaf,skipZero,sepSN){const deud=new Set(dd.split('
  data.forEach(r=>{let c=g(r,'c');if(c==null||c==='')return;c=String(c).trim();if(!/\d/.test(c)||/total/i.test(c))return;
   const n=String(g(r,'n')??'').trim();let si=m.sid!=null?num(g(r,'sid'))-num(g(r,'sia')):num(g(r,'si'));let sf=m.sfd!=null?num(g(r,'sfd'))-num(g(r,'sfa')):num(g(r,'sf'));const ca=num(g(r,'ca')),ab=num(g(r,'ab'));
   const isSN=sepSN&&/^[A-Za-z]{1,2}\d{3,}$/.test(c);
-  if(sg==='n'&&m.sid==null&&m.sfd==null&&!isSN){const d=c.replace(/\D/g,'')[0];if(!deud.has(d)){si=-si;sf=-sf}}
+  if(sg==='n'&&m.sid==null&&m.sfd==null&&!isSN){const d=c.replace(/\D/g,'')[0];let ng=!deud.has(d);if(!ng&&/acum(ulad|\.|\b)|estimaci[oó]n|reserva para|provisi[oó]n para|incobrab|obsolesc/i.test(n))ng=true;else if(ng&&/p[eé]rdidas?\s+(acum|de\s+ejerc|del\s+ejerc)|d[eé]ficit|insuficiencia/i.test(n))ng=false;if(ng){si=-si;sf=-sf}}
   if(m.sf==null&&m.sfd==null)sf=si+ca-ab;if(m.si==null&&m.sid==null)si=sf-ca+ab;
   if(skipZero&&Math.abs(si)<0.005&&Math.abs(ca)<0.005&&Math.abs(ab)<0.005&&Math.abs(sf)<0.005)return;
   (isSN?sn:out).push([c,n,r2(si),r2(ca),r2(ab),r2(sf)])});
@@ -1781,7 +1784,8 @@ function detectHeader(rows){let best=0,bs=-1;for(let i=0;i<Math.min(rows.length,
 function guessMap(hdr,kind){const used=new Set(),m={};const F=FIELDS[kind];
  const order=kind==='tb'?['sid','sia','sfd','sfa','n','c','si','ca','ab','sf']:['f','p','t','d','c','ca','ab','imp','dc'];
  order.forEach(k=>{const re=F.find(x=>x[0]===k)[2];const i=hdr.findIndex((h,ix)=>!used.has(ix)&&re.test(String(h).trim()));if(i>=0){m[k]=i;used.add(i)}});
- if(kind==='tb'&&m.sfd!=null&&m.sfa!=null)delete m.sf;if(kind==='tb'&&m.sid!=null&&m.sia!=null)delete m.si;return m}
+ if(kind==='tb'&&m.sfd!=null&&m.sfa!=null)delete m.sf;if(kind==='tb'&&m.sid!=null&&m.sia!=null)delete m.si;
+ if(kind==='jr'&&m.c==null){const i=hdr.findIndex(x=>/cuenta/i.test(String(x)));if(i>=0)m.c=i}if(kind==='jr'&&m.p==null){const i=hdr.findIndex((x,ix)=>!used.has(ix)&&/^(n[uú]m(ero)?\.?|no\.?)$/i.test(String(x).trim()));if(i>=0)m.p=i}return m}
 function buildJR(data,m){const out=[];let lastAcc='',lastDate='',lastPol='',lastT='';const g=(r,k)=>m[k]!=null?r[m[k]]:undefined;
  data.forEach(r=>{const cRaw=String(g(r,'c')??'').trim();const fd=pdate(g(r,'f'));let ca=num(g(r,'ca')),ab=num(g(r,'ab'));
   if(m.imp!=null&&m.ca==null){const v=num(g(r,'imp'));const dc=String(g(r,'dc')??'').trim();if(dc){if(/^(c|cargo|d|debe|debit|dr|deudor)$/i.test(dc))ca=Math.abs(v);else ab=Math.abs(v)}else{if(v>=0)ca=v;else ab=-v}}
@@ -2661,7 +2665,7 @@ function crumbs(title){if(S.view==='home'||!S.eid)return '';const parts=['Expedi
  else if(['cruce','suc'].includes(S.view)){parts.push('Cédulas de resultados')}else if(g)parts.push(g[1].replace(/^\d+ · /,''));
  return `<div class="crumbs">${parts.map(esc).join(' <span>›</span> ')}</div>`}
 const helpSeen=()=>{try{return JSON.parse(ls('aud.helpSeen')||'{}')||{}}catch(e){return {}}};
-ACT.menu=()=>{if(window.matchMedia('(max-width: 900px)').matches)$('#side').classList.toggle('open');else{document.body.classList.toggle('navmin');ls('aud.navmin',document.body.classList.contains('navmin')?'1':'0')}};
+ACT.menu=()=>{if(window.matchMedia('(max-width: 860px)').matches)$('#side').classList.toggle('open');else{document.body.classList.toggle('navmin');ls('aud.navmin',document.body.classList.contains('navmin')?'1':'0')}};
 addEventListener('load',()=>{if(ls('aud.navmin')==='1')document.body.classList.add('navmin');brandLogo()});
 function brandLogo(){const b=document.querySelector('#side .brand');const lg=S.settings&&S.settings.logo;if(!b)return;const im=b.querySelector('img');if(lg&&!im){const i=document.createElement('img');i.src=lg;i.alt='';i.className='blogo';b.prepend(i)}else if(im&&!lg)im.remove();else if(im&&lg&&im.src!==lg)im.src=lg;const sm=b.querySelector('small');if(sm&&S.settings&&S.settings.firma)sm.textContent=S.settings.firma}
 
@@ -3083,7 +3087,7 @@ CH.rskAs=el=>{const r=(S.eng.rreg||{})[el.dataset.id]||{};const s=new Set(rskCod
 CH.rskP=el=>engUpd({rreg:{[el.dataset.id]:{procs:{[el.dataset.p]:el.checked}}}});
 ACT.rskOpen=b=>{S.rskOpen=S.rskOpen===b.dataset.id?null:b.dataset.id;render()};
 ACT.rskAdd=()=>{const id='r'+rid();engUpd({rreg:{[id]:{ord:Date.now(),k:'GEN',asev:'',ri:'M',desc:''}}});S.rskOpen=null};
-ACT.rskDel=b=>{if(!confirm('¿Eliminar este riesgo del registro?'))return;engUpd({rreg:{[b.dataset.id]:null}})};
+ACT.rskDel=b=>ask('Se eliminará este riesgo del registro de riesgos y respuestas.','Eliminar riesgo',()=>engUpd({rreg:{[b.dataset.id]:null}}),true);
 ACT.rskGo=b=>{const k=b.dataset.k;S.rubro=k;S.acc=null;S.wpTab='pro';go('wp')};
 ACT.rskSeed=()=>{const ex=rskList().map(([,r])=>r);const has=(k,src)=>ex.some(r=>r.src===src);const o={};let n=0;const add=r=>{o['r'+rid()+n]={ord:Date.now()+n,...r};n++};
  if(!has('','nia240-elu'))add({src:'nia240-elu',k:'GEN',asev:'',ri:'A',fra:true,desc:'Elusión de los controles por parte de la administración (riesgo presunto, NIA 240.31): registro de asientos manuales o al cierre, sesgo en estimaciones y operaciones fuera del curso normal.',resp:'Prueba de asientos de diario (Muestreo y prueba de asientos), revisión de sesgo en estimaciones y análisis de operaciones inusuales.'});
@@ -3101,9 +3105,34 @@ function rskForRub(k){const L=rskStats().L.filter(x=>x.e.k===k);if(!L.length)ret
 ACT.rskGoReg=()=>{S.rskTab='reg';go('rsk')};
 HELP.rsk='Registro de riesgos de incorrección material por rubro y aseveración, con la respuesta planeada. Empieza con «Proponer riesgos»: toma los rubros significativos o con fraude de la matriz de Materialidad, los riesgos de fraude de Control interno y los riesgos presuntos de la NIA 240. Después precisa la causa de cada riesgo y revisa que sus procedimientos estén ligados y terminados.';
 function rskNote(){const K=rskStats();return `<div class="note ${K.bad?'bad':K.n?'':'warn'}">${K.n?`Registro de riesgos: ${K.n} riesgos, ${K.sig} significativos, ${K.bad} sin respuesta.`:'Aún no hay riesgos en el registro de riesgos y respuestas.'} <button class="btn sm" data-act="rskGoReg">Abrir riesgos y respuestas</button></div>`}
-function rskNote(){const K=rskStats();return `<div class="note ${K.bad?'bad':K.n?'':'warn'}">${K.n?`Registro de riesgos: ${K.n} riesgos, ${K.sig} significativos, ${K.bad} sin respuesta.`:'Aún no hay riesgos en el registro de riesgos y respuestas.'} <button class="btn sm" data-act="rskGoReg">Abrir riesgos y respuestas</button></div>`}
 
+/* expedientes: nuevo, abrir, eliminar (restaurados) */
+ACT.openEng=b=>openEng(b.dataset.id,'avance');
+ACT.newEng=()=>{const y=new Date().getFullYear()-1;const m=modal('Nuevo expediente',`<div class="form">
+ <label class="f wide">Razón social<input id="ne-n" placeholder="Ejemplo: Industrias del Centro, S.A. de C.V."></label>
+ <label class="f">RFC<input id="ne-r" maxlength="13"></label><label class="f">Ejercicio<input id="ne-y" type="number" value="${y}"></label>
+ <label class="f">Fecha de cierre<input id="ne-c" type="date" value="${y}-12-31"></label>
+ <label class="f">Marco de información<select id="ne-m"><option>NIF mexicanas</option><option>IFRS (NIIF)</option></select></label></div>
+ <div class="row"><label class="chk"><input type="checkbox" id="ne-t1" checked> Auditoría financiera</label><label class="chk"><input type="checkbox" id="ne-t2" checked> Revisión fiscal</label><label class="chk"><input type="checkbox" id="ne-t3"> Dictamen fiscal</label><label class="chk"><input type="checkbox" id="ne-t4" checked> ISSIF</label></div>
+ <div class="row"><button class="btn pri" id="ne-ok">Crear expediente</button></div>`);
+ m.querySelector('#ne-ok').onclick=async()=>{const n=m.querySelector('#ne-n').value.trim();if(!n){toast('Escribe la razón social del cliente.');return}
+  const tipo=[['ne-t1','Auditoría financiera'],['ne-t2','Revisión fiscal'],['ne-t3','Dictamen fiscal'],['ne-t4','ISSIF']].filter(([i])=>m.querySelector('#'+i).checked).map(x=>x[1]);
+  const id='e'+rid();try{await S.db.doc('eng/'+id).set({datos:{nombre:n,rfc:m.querySelector('#ne-r').value.trim().toUpperCase(),ejercicio:m.querySelector('#ne-y').value,cierre:m.querySelector('#ne-c').value,marco:m.querySelector('#ne-m').value,tipo},estado:'proceso',createdAt:nowIso(),createdBy:S.uid||'',mat:{metodo:'escala',pmPct:.9,amptPct:.05},tc:{fuente:'DOF'},risks:{},...stamp()});m.remove();openEng(id,'plan')}catch(e){toast('No se pudo crear el expediente. Verifica que tengas permiso de colaborador.')}}};
+ACT.delEng=b=>{const e=S.engs.find(x=>x.id===b.dataset.id);ask(`Se eliminará <b>${esc(e&&e.datos&&e.datos.nombre)}</b> con todas sus cédulas, ajustes, observaciones y evidencia. Esta acción no se puede deshacer.`,'Eliminar expediente',()=>deleteEng(b.dataset.id),true)};
+async function deleteEng(id){toast('Eliminando expediente…');try{const base='eng/'+id;
+ for(const c of ['tb','jr','wp','adj','obs','smp','conf','evd','meta','imp','ci','hrs','req','cli']){const s=await S.db.collection(base+'/'+c).get();
+   if(c==='evd'&&S.assets)for(const d of s.docs){const a=d.data();if(a.assetId){try{await S.assets.delete(a.assetId)}catch(e){}}}
+   for(let i=0;i<s.docs.length;i+=6)await Promise.all(s.docs.slice(i,i+6).map(d=>S.db.doc(base+'/'+c+'/'+d.id).delete()))}
+ await S.db.doc(base).delete();if(S.eid===id)closeEng();toast('Expediente eliminado.')}catch(e){toast('No se pudo eliminar por completo. Vuelve a intentarlo.')}}
+
+/* versión visible y aviso de actualización */
+const APP_VER=13,APP_FECHA='23 de noviembre de 2026';
+function verPaint(nv){const el=$('#appver');if(!el)return;el.classList.toggle('new',!!nv);el.dataset.nv=nv||'';el.innerHTML=nv?`Hay una versión nueva (${nv}). Tienes la ${APP_VER}. Presiona aquí para actualizar.`:`Versión ${APP_VER} · ${APP_FECHA}`;el.title=nv?'Recarga el programa con la versión más reciente':'Versión instalada del programa'}
+async function verCheck(){if(!/^https?:$/.test(location.protocol))return;try{const r=await fetch(location.pathname.replace(/[^/]*$/,'')+'index.html?v='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();const m=t.match(/APP_VER=(\d+)/);if(m&&+m[1]>APP_VER)verPaint(+m[1])}catch(e){}}
+$('#appver').addEventListener('click',async()=>{if(!$('#appver').dataset.nv)return;try{if('caches' in window){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}if(navigator.serviceWorker){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update()))}}catch(e){}location.reload()});
+verPaint();setTimeout(verCheck,5000);setInterval(verCheck,20*60*1000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')verCheck()});
 ACT.satGo=()=>go('sat');
+document.addEventListener('click',e=>{const s=$('#side');if(s&&s.classList.contains('open')&&!e.target.closest('#side')&&!e.target.closest('[data-act="menu"]'))s.classList.remove('open')},true);
 let NAV_SIG='';{const _rd=render;render=function(){_rd.apply(this,arguments);try{const sig=[S.eid,!!S.eng,S.view,S.eng?satOn():'',S.eng?Math.round(engAvance()*100):''].join('|');if(sig!==NAV_SIG){NAV_SIG=sig;renderNav()}}catch(e){}}}
 ACT.navRail=()=>{document.body.classList.toggle('navrail');ls('aud.navrail',document.body.classList.contains('navrail')?'1':'0');renderNav()};try{if(ls('aud.navrail')==='1')document.body.classList.add('navrail')}catch(e){}
 renderNav();window.__boot=boot;if(window.__ready)boot();
